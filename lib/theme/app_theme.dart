@@ -8,11 +8,9 @@ class AppTheme {
       seedColor: AppColors.primary,
       primary: AppColors.primary,
       secondary: AppColors.secondary,
-      background: AppColors.background,
       surface: AppColors.surface,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
-      onBackground: AppColors.textPrimary,
       onSurface: AppColors.textPrimary,
     );
 
@@ -21,12 +19,13 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
       textTheme: GoogleFonts.poppinsTextTheme().apply(
-        bodyColor: AppColors.textPrimary,
-        displayColor: AppColors.textPrimary,
+        bodyColor: colorScheme.onSurface,
+        displayColor: colorScheme.onSurface,
       ),
+      cardColor: colorScheme.surface,
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: colorScheme.surface,
         hintStyle: const TextStyle(color: AppColors.textMuted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),

@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
-class CoffeCard extends StatelessWidget {
+class ProductCard extends StatelessWidget {
   final String name;
   final String type;
   final int price;
@@ -9,7 +9,7 @@ class CoffeCard extends StatelessWidget {
   final String imageUrl;
   final double rating;
 
-  const CoffeCard({
+  const ProductCard({
     super.key,
     required this.name,
     required this.type,
@@ -95,7 +95,7 @@ class CoffeCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   weight,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  style: TextStyle(fontSize: 10, color: Colors.grey[600]),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

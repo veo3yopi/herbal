@@ -13,23 +13,17 @@ class CartProvider extends ChangeNotifier {
   int get totalPrice {
     int total = 0;
     for (var item in _items) {
-      // Rumus : harga x jumlah barang
-      //  Kita pastikan tipe datanya int dulu
-
-      int price = int.parse(
-        item['price']
-            .toString()
-            .replaceAll('Rp ', '')
-            .replaceAll('rb', '000')
-            .replaceAll('.', ''),
-      );
+      final int price = item['price'] as int;
       total += price * (item['qty'] as int);
     }
     return total;
   }
 
   // 2. Aksi : tambah ke keranjang
-  void addToCart(Map<String, String> product, String size) {
+  void addToCart(Map<String, dynamic> product, String size) {
+    final int price = product['price'] is int
+        ? product['price'] as int
+        : int.tryParse(product['price'].toString()) ?? 0;
     // cek apakah produk dengan nama & ukurna ang sama sudah ada ?
     int index = _items.indexWhere(
       (item) => item['name'] == product['name'] && item['size'] == size,
@@ -41,7 +35,7 @@ class CartProvider extends ChangeNotifier {
       // jika belum ada, masukansebagai baran baru
       _items.add({
         'name': product['name'],
-        'price': product['price'],
+        'price': price,
         'image': product['image'],
         'size': size,
         'qty': 1,

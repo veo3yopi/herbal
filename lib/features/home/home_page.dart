@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../widget/coffe_card.dart';
+import '../../widget/product_card.dart';
 import '../detail/detail_page.dart';
 import '../cart/cart_page.dart';
 
@@ -21,7 +20,7 @@ class _HomePageState extends State<HomePage> {
       'price': 100000,
       'weight': "60 kapsul",
       'image':
-          'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80',
+          'https://down-id.img.susercontent.com/file/id-11134208-7ra0s-mdcokz4a1dbsaa',
     },
     {
       'name': 'Lambungku',
@@ -73,7 +72,7 @@ class _HomePageState extends State<HomePage> {
     final theme = Theme.of(context);
     // ukuran grid akan diatur lewat childAspectRatio saja agar responsif
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       // Safe area memasikan konten tidak tertutup poni HP
       body: SafeArea(
         child: Padding(
@@ -96,7 +95,7 @@ class _HomePageState extends State<HomePage> {
                       const Text(
                         'Yopi Hendrian',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: 26,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
                         ),
@@ -106,11 +105,11 @@ class _HomePageState extends State<HomePage> {
 
                   // avaratar / foto profil
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 70,
+                    height: 70,
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(35),
                       image: const DecorationImage(
                         image: NetworkImage("https://i.pravatar.cc/150?img=11"),
                       ),
@@ -123,27 +122,33 @@ class _HomePageState extends State<HomePage> {
               // Bagian 2: Search Bar
               // kita buat search bar manual agar desainnya custom
               Container(
+                clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withAlpha(26), // bayangan halus
+                      color: Colors.grey.withAlpha(30), // bayangan halus
                       spreadRadius: 1,
                       blurRadius: 10,
                       offset: const Offset(0, 3),
                     ),
                   ],
                 ),
-                child: const TextField(
+                child: TextField(
                   decoration: InputDecoration(
                     hintText: "Cari obat herbal...",
                     prefixIcon: Icon(
-                  CupertinoIcons.search,
+                      CupertinoIcons.search,
                       color: theme.colorScheme.primary,
                     ),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(15),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.all(15),
                   ),
                 ),
               ),
@@ -216,7 +221,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                           );
                         },
-                        child: CoffeCard(
+                        child: ProductCard(
                           name: coffeeList[index]['name'] as String,
                           type: coffeeList[index]['type'] as String,
                           price: coffeeList[index]['price'] as int,

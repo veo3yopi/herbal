@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../home/home_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -22,8 +21,13 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final onSurface = theme.colorScheme.onSurface;
+    final muted = onSurface.withOpacity(0.65);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -42,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
                       height: 100,
                       width: 100,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFD17842),
+                        color: primary,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Icon(
@@ -56,17 +60,15 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 30),
                   Text(
                     "Welcome Back!",
-                    style: GoogleFonts.poppins(
-                      fontSize: 28,
+                    style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFF4E342E),
+                      color: onSurface,
                     ),
                   ),
                   Text(
                     "Masuk untuk menikmati kopimu",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      color: Colors.grey,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: muted,
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -86,17 +88,17 @@ class _LoginPageState extends State<LoginPage> {
                     },
                     decoration: InputDecoration(
                       labelText: "Email",
-                      prefixIcon: const Icon(
+                      prefixIcon: Icon(
                         Icons.email_outlined,
-                        color: Color(0xFFD17842),
+                        color: primary,
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFD17842),
+                        borderSide: BorderSide(
+                          color: primary,
                           width: 2,
                         ),
                       ),
@@ -118,9 +120,9 @@ class _LoginPageState extends State<LoginPage> {
                     },
                     decoration: InputDecoration(
                       labelText: "Password",
-                      prefixIcon: const Icon(
+                      prefixIcon: Icon(
                         Icons.lock_outline,
-                        color: Color(0xFFD17842),
+                        color: primary,
                       ),
                       suffixIcon: IconButton(
                         onPressed: () {
@@ -130,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                         },
                         icon: Icon(
                           _isObscure ? Icons.visibility_off : Icons.visibility,
-                          color: Colors.grey,
+                          color: muted,
                         ),
                       ),
                       border: OutlineInputBorder(
@@ -138,8 +140,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFD17842),
+                        borderSide: BorderSide(
+                          color: primary,
                           width: 2,
                         ),
                       ),
@@ -153,7 +155,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: Text(
                       "Lupa Password",
                       style: TextStyle(
-                        color: const Color(0xFFD17842),
+                        color: primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -167,9 +169,9 @@ class _LoginPageState extends State<LoginPage> {
                     child: ElevatedButton(
                       onPressed: _handlelogin, // panggil fungsi login
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFD17842),
+                        backgroundColor: primary,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadiusGeometry.circular(15),
+                          borderRadius: BorderRadius.circular(15),
                         ),
                       ),
                       child: const Text(

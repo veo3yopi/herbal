@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../cart/cart_provider.dart';
 
@@ -18,10 +19,19 @@ class _DetailPageState extends State<DetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final onSurface = theme.colorScheme.onSurface;
+    final muted = onSurface.withOpacity(0.65);
+    final formatter = NumberFormat.currency(
+      locale: 'id',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
     // ambil data dari widget
     var coffee = widget.coffeData;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Column(
         children: [
           // Gambar header
@@ -79,10 +89,10 @@ class _DetailPageState extends State<DetailPage> {
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(25),
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: theme.cardColor,
                 // membuat efek melengkung ke atas menutupi sedikit gambar
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(40),
                   topRight: Radius.circular(40),
                 ),
@@ -107,44 +117,47 @@ class _DetailPageState extends State<DetailPage> {
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF4E342E),
+                                  color: onSurface,
                                 ),
                               ),
                               Text(
                                 coffee['type']!,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[500],
-                                ),
+                                style: TextStyle(fontSize: 14, color: muted),
                               ),
                             ],
                           ),
                         ],
                       ),
                       Text(
-                        coffee['price'].toString(),
-                        style: const TextStyle(
+                        formatter.format(coffee['price']),
+                        style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFD17842),
+                          color: primary,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 25),
-                  const Text(
+                  Text(
                     'Description',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: onSurface,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     "Nikmati sensasi kopi pilihan terbaik yang diseduh dengan teknik khusus untuk menghasilkan rasa yang kaya dan aroma yang memikat.",
-                    style: TextStyle(color: Colors.grey[600], height: 1.5),
+                    style: TextStyle(color: muted, height: 1.5),
                   ),
                   const SizedBox(height: 25),
-                  const Text(
+                  Text(
                     'Size',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: onSurface,
+                    ),
                   ),
                   const SizedBox(height: 10),
 
@@ -176,7 +189,7 @@ class _DetailPageState extends State<DetailPage> {
                         cart.addToCart(
                           {
                             'name': coffee['name']!,
-                            'price': coffee['price']!,
+                            'price': coffee['price'] as int,
                             'image': coffee['image']!,
                           },
 
@@ -190,13 +203,13 @@ class _DetailPageState extends State<DetailPage> {
                               "${coffee['name']} (Size $selectedSize) berhaisl ditambahkan!",
                             ),
 
-                            backgroundColor: const Color(0xFFD17842),
+                            backgroundColor: primary,
                             duration: const Duration(seconds: 1),
                           ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFD17842),
+                        backgroundColor: primary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -223,6 +236,9 @@ class _DetailPageState extends State<DetailPage> {
   // widget kecil ntuk membuat tombolukuran biar kodenya rapi
   Widget _buildSizeButton(String size) {
     bool isSelected = selectedSize == size;
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final muted = theme.colorScheme.onSurface.withOpacity(0.6);
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -234,7 +250,7 @@ class _DetailPageState extends State<DetailPage> {
         width: 50,
         height: 50,
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFD17842) : Colors.white,
+          color: isSelected ? primary : theme.cardColor,
           borderRadius: BorderRadius.circular(15),
           border: Border.all(
             color: isSelected ? Colors.transparent : Colors.grey.shade300,
@@ -245,7 +261,7 @@ class _DetailPageState extends State<DetailPage> {
             size,
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.white : Colors.grey[600],
+              color: isSelected ? Colors.white : muted,
             ),
           ),
         ),

@@ -70,9 +70,10 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     // ukuran grid akan diatur lewat childAspectRatio saja agar responsif
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
+      backgroundColor: theme.colorScheme.background,
       // Safe area memasikan konten tidak tertutup poni HP
       body: SafeArea(
         child: Padding(
@@ -97,7 +98,7 @@ class _HomePageState extends State<HomePage> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF4E342E), // warna kopi tua
+                          color: Colors.black87,
                         ),
                       ),
                     ],
@@ -138,8 +139,8 @@ class _HomePageState extends State<HomePage> {
                   decoration: InputDecoration(
                     hintText: "Cari obat herbal...",
                     prefixIcon: Icon(
-                      CupertinoIcons.search,
-                      color: Color(0xFFD17842),
+                  CupertinoIcons.search,
+                      color: theme.colorScheme.primary,
                     ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.all(15),
@@ -176,7 +177,7 @@ class _HomePageState extends State<HomePage> {
                           // jika index ini sama denga yang dipilih -> warna Orange
                           // jika tika ->warna putih
                           color: _selectedIndex == index
-                              ? const Color(0xFFD17842)
+                              ? theme.colorScheme.primary
                               : Colors.white,
                           borderRadius: BorderRadius.circular(20),
                           // tambahkan border tipis jika tidk dipilih
@@ -233,7 +234,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFFD17842),
+        backgroundColor: theme.colorScheme.primary,
         child: const Icon(Icons.shopping_bag, color: Colors.white),
         onPressed: () {
           // pindah ke halmaan keranjang

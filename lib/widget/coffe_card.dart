@@ -21,6 +21,11 @@ class CoffeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final onSurface = theme.colorScheme.onSurface;
+    final muted = onSurface.withOpacity(0.65);
+
     final formatter = NumberFormat.currency(
       locale: 'id',
       symbol: 'Rp ',
@@ -47,17 +52,21 @@ class CoffeCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(14),
-                  topRight: Radius.circular(14),
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
                 ),
                 child: Image.network(
                   imageUrl,
-                  height: 160,
+                  height: 135,
                   width: double.infinity,
                   fit: BoxFit.cover,
                 ),
               ),
-              Positioned(right: 0, top: 0, child: _ratingBadge(rating)),
+              Positioned(
+                right: 0,
+                top: 0,
+                child: _ratingBadge(rating, primary),
+              ),
             ],
           ),
           // const SizedBox(height: 5),
@@ -69,21 +78,21 @@ class CoffeCard extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF3E2C28),
+                    color: onSurface,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                // Text(
-                //   type,
-                //   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                //   maxLines: 1,
-                //   overflow: TextOverflow.ellipsis,
-                // ),
-                // const SizedBox(height: 6),
+                Text(
+                  type,
+                  style: TextStyle(fontSize: 12, color: muted),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
                 Text(
                   weight,
                   style: TextStyle(fontSize: 12, color: Colors.grey[500]),
@@ -96,13 +105,13 @@ class CoffeCard extends StatelessWidget {
                   children: [
                     Text(
                       formatter.format(price),
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: TextStyle(
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFD17842),
+                        color: primary,
                       ),
                     ),
-                    _addButton(),
+                    _addButton(primary),
                   ],
                 ),
               ],
@@ -113,10 +122,10 @@ class CoffeCard extends StatelessWidget {
     );
   }
 
-  Widget _ratingBadge(double rating) {
+  Widget _ratingBadge(double rating, Color primary) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFD17842).withAlpha(229),
+        color: primary.withAlpha(229),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(12),
           topRight: Radius.circular(12),
@@ -141,11 +150,11 @@ class CoffeCard extends StatelessWidget {
     );
   }
 
-  Widget _addButton() {
+  Widget _addButton(Color primary) {
     return Container(
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: const Color(0xFFD17842),
+        color: primary,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(

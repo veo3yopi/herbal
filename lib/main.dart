@@ -2,9 +2,9 @@ import 'package:coffe/features/auth/login_page.dart';
 import 'package:coffe/features/home/home_page.dart';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'features/cart/cart_provider.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   runApp(
@@ -23,12 +23,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Coffe Shop UI',
-      theme: ThemeData(
-        // mengatur defaul color & font
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4E342E)),
-        useMaterial3: true,
-        textTheme: GoogleFonts.poppinsTextTheme(),
-      ),
+      theme: AppTheme.light(),
       home: const HomePage(),
     );
   }

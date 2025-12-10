@@ -125,7 +125,7 @@ class _HomePageState extends State<HomePage> {
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.grey.withAlpha(30), // bayangan halus
@@ -238,17 +238,17 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: theme.colorScheme.primary,
-        child: const Icon(Icons.shopping_bag, color: Colors.white),
-        onPressed: () {
-          // pindah ke halmaan keranjang
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CartPage()),
-          );
-        },
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   backgroundColor: theme.colorScheme.primary,
+      //   child: const Icon(Icons.shopping_bag, color: Colors.white),
+      //   onPressed: () {
+      //     // pindah ke halmaan keranjang
+      //     Navigator.push(
+      //       context,
+      //       MaterialPageRoute(builder: (context) => const CartPage()),
+      //     );
+      //   },
+      // ),
     );
   }
 }

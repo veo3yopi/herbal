@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../cart/cart_provider.dart';
+// import 'package:cached_network_image/cached_network_image.dart';
+import '../cart/cart_page.dart';
 
 class DetailPage extends StatefulWidget {
   // kita butuh data dari halaman  home
@@ -42,7 +44,7 @@ class _DetailPageState extends State<DetailPage> {
                 tag: coffee['name']!,
                 child: Image.network(
                   coffee['image']!,
-                  height: 350,
+                  height: 360,
                   width: double.infinity,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, StackTrace) =>
@@ -68,15 +70,36 @@ class _DetailPageState extends State<DetailPage> {
                         ),
                       ),
                       // bomol love bulat
-                      CircleAvatar(
-                        backgroundColor: Colors.black.withAlpha(50),
-                        child: IconButton(
-                          onPressed: () {},
-                          icon: const Icon(
-                            Icons.favorite_border,
-                            color: Colors.white,
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: Colors.black.withAlpha(50),
+                            child: IconButton(
+                              onPressed: () {},
+                              icon: const Icon(
+                                Icons.favorite_border,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
-                        ),
+                          SizedBox(width: 10),
+                          CircleAvatar(
+                            backgroundColor: Colors.black.withAlpha(50),
+                            child: IconButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => CartPage(),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.shopping_cart,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

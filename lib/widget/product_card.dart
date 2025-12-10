@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ProductCard extends StatelessWidget {
   final String name;
@@ -57,7 +58,7 @@ class ProductCard extends StatelessWidget {
                 ),
                 child: Image.network(
                   imageUrl,
-                  height: 135,
+                  height: 140,
                   width: double.infinity,
                   fit: BoxFit.cover,
                 ),

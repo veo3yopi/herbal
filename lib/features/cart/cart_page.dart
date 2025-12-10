@@ -38,10 +38,10 @@ class _CartPageState extends State<CartPage> {
             centerTitle: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
-            leading: IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: Icon(Icons.arrow_back_ios, color: onSurface, size: 20),
-            ),
+            // leading: IconButton(
+            //   onPressed: () => Navigator.pop(context),
+            //   icon: Icon(Icons.arrow_back_ios, color: onSurface, size: 20),
+            // ),
             actions: [
               // Tombl sampa untuk hapus semua
               IconButton(

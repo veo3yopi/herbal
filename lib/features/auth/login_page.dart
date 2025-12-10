@@ -1,3 +1,4 @@
+import 'package:coffe/main_page.dart';
 import 'package:flutter/material.dart';
 import '../home/home_page.dart';
 
@@ -67,9 +68,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   Text(
                     "Masuk untuk menikmati kopimu",
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: muted,
-                    ),
+                    style: theme.textTheme.bodyMedium?.copyWith(color: muted),
                   ),
                   const SizedBox(height: 40),
 
@@ -88,19 +87,13 @@ class _LoginPageState extends State<LoginPage> {
                     },
                     decoration: InputDecoration(
                       labelText: "Email",
-                      prefixIcon: Icon(
-                        Icons.email_outlined,
-                        color: primary,
-                      ),
+                      prefixIcon: Icon(Icons.email_outlined, color: primary),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
-                        borderSide: BorderSide(
-                          color: primary,
-                          width: 2,
-                        ),
+                        borderSide: BorderSide(color: primary, width: 2),
                       ),
                     ),
                   ),
@@ -120,10 +113,7 @@ class _LoginPageState extends State<LoginPage> {
                     },
                     decoration: InputDecoration(
                       labelText: "Password",
-                      prefixIcon: Icon(
-                        Icons.lock_outline,
-                        color: primary,
-                      ),
+                      prefixIcon: Icon(Icons.lock_outline, color: primary),
                       suffixIcon: IconButton(
                         onPressed: () {
                           setState(() {
@@ -140,10 +130,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
-                        borderSide: BorderSide(
-                          color: primary,
-                          width: 2,
-                        ),
+                        borderSide: BorderSide(color: primary, width: 2),
                       ),
                     ),
                   ),
@@ -213,7 +200,7 @@ class _LoginPageState extends State<LoginPage> {
         // Pindah ke home dan hapus riwayat login
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
+          MaterialPageRoute(builder: (context) => const MainPage()),
         );
       } else {
         // gagal login

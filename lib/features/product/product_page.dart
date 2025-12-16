@@ -1,7 +1,9 @@
 import 'package:coffe/features/detail/detail_page.dart';
+import 'package:coffe/features/home/providers/product_provider.dart';
 import 'package:coffe/widget/product_card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage({super.key});
@@ -11,50 +13,57 @@ class ProductPage extends StatefulWidget {
 }
 
 class _ProductPageState extends State<ProductPage> {
-  final List<Map<String, dynamic>> products = [
-    {
-      'name': 'Sendifit',
-      'type': 'Sendi',
-      'price': 100000,
-      'weight': "60 kapsul",
-      'image':
-          'https://down-id.img.susercontent.com/file/id-11134208-7ra0s-mdcokz4a1dbsaa',
-    },
-    {
-      'name': 'Lambungku',
-      'type': 'Lambung',
-      'price': 200000,
-      'weight': "60 kapsul",
-      'image':
-          'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80',
-    },
-    {
-      'name': 'Latte Art',
-      'type': 'Double Shot',
-      'price': 300000,
-      'weight': "60 kapsul",
-      'image':
-          'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80',
-    },
-    {
-      'name': 'Cold Brew',
-      'type': 'Low Acid',
-      'price': 400000,
-      'weight': "60 kapsul",
-      'image':
-          'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProductProvider>().fetchProducts();
+    });
+  }
+
+  // final List<Map<String, dynamic>> products = [
+  //   {
+  //     'name': 'Sendifit',
+  //     'type': 'Sendi',
+  //     'price': 100000,
+  //     'weight': "60 kapsul",
+  //     'image':
+  //         'https://down-id.img.susercontent.com/file/id-11134208-7ra0s-mdcokz4a1dbsaa',
+  //   },
+  //   {
+  //     'name': 'Lambungku',
+  //     'type': 'Lambung',
+  //     'price': 200000,
+  //     'weight': "60 kapsul",
+  //     'image':
+  //         'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80',
+  //   },
+  //   {
+  //     'name': 'Latte Art',
+  //     'type': 'Double Shot',
+  //     'price': 300000,
+  //     'weight': "60 kapsul",
+  //     'image':
+  //         'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80',
+  //   },
+  //   {
+  //     'name': 'Cold Brew',
+  //     'type': 'Low Acid',
+  //     'price': 400000,
+  //     'weight': "60 kapsul",
+  //     'image':
+  //         'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80',
+  //   },
+  // ];
   String query = '';
 
   @override
   Widget build(BuildContext context) {
+    final productState = context.watch<ProductProvider>();
+    final products = productState.products;
+
     final theme = Theme.of(context);
-    final filtered = products.where((p) {
-      final q = query.toLowerCase();
-      return p['name'].toLowerCase().contains(q) ||
-          p['type'].toLowerCase().contains(q);
-    }).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Produk'),
@@ -99,34 +108,71 @@ class _ProductPageState extends State<ProductPage> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: GridView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                itemCount: filtered.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.6,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 16,
-                ),
-                itemBuilder: (context, index) {
-                  final item = filtered[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => DetailPage(coffeData: item),
+              child: Builder(
+                builder: (_) {
+                  if (productState.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (productState.error != null) {
+                    return Center(
+                      child: TextButton(
+                        onPressed: () => productState.fetchProducts(),
+                        child: Text('Gagal memuat. Coba lagi'),
+                      ),
+                    );
+                  }
+                  if (products.isEmpty) {
+                    return const Center(child: Text('Belum ada produk'));
+                  }
+                  return GridView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: products.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.6,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 16,
+                        ),
+                    itemBuilder: (context, index) {
+                      final item = products[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DetailPage(
+                                coffeData: {
+                                  'name': item.name,
+                                  'type': item.categories.isNotEmpty
+                                      ? item.categories.first.name
+                                      : '',
+                                  'price': item.price,
+                                  'weight': '${item.weight} gr',
+                                  'image':
+                                      item.primaryImage ??
+                                      (item.image.isNotEmpty
+                                          ? item.image.first
+                                          : ''),
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                        child: ProductCard(
+                          name: item.name,
+                          type: item.categories.isNotEmpty
+                              ? item.categories.first.name
+                              : '',
+                          price: item.price.toInt(),
+                          weight: '${item.weight} gr',
+                          imageUrl:
+                              item.primaryImage ??
+                              (item.image.isNotEmpty ? item.image.first : ''),
+                          rating: 4.5,
                         ),
                       );
                     },
-                    child: ProductCard(
-                      name: item['name'],
-                      type: item['type'],
-                      price: item['price'],
-                      weight: item['weight'],
-                      imageUrl: item['image'],
-                      rating: item['rating'] ?? 4.5,
-                    ),
                   );
                 },
               ),

@@ -5,4 +5,6 @@ class AppConfig {
   static String get baseUrl => useSandbox ? sandboxUrl : productionUrl;
 
   static String categoriesEndpoint() => '$baseUrl/api/categories';
+  static String productsEndpoint({int page = 1}) =>
+      '$baseUrl/api/products?page=$page';
 }

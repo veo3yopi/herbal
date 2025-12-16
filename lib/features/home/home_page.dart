@@ -1,4 +1,5 @@
 import 'package:coffe/features/home/providers/category_provider.dart';
+import 'package:coffe/features/home/providers/product_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -20,42 +21,53 @@ class _HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CategoryProvider>().fetchCategories();
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProductProvider>().fetchProducts();
+    });
   }
 
-  final List<Map<String, dynamic>> coffeeList = [
-    {
-      'name': 'Sendifit',
-      'type': 'Sendi',
-      'price': 100000,
-      'weight': "60 kapsul",
-      'image':
-          'https://down-id.img.susercontent.com/file/id-11134208-7ra0s-mdcokz4a1dbsaa',
-    },
-    {
-      'name': 'Lambungku',
-      'type': 'Lambung',
-      'price': 200000,
-      'weight': "60 kapsul",
-      'image':
-          'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80',
-    },
-    {
-      'name': 'Latte Art',
-      'type': 'Double Shot',
-      'price': 300000,
-      'weight': "60 kapsul",
-      'image':
-          'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80',
-    },
-    {
-      'name': 'Cold Brew',
-      'type': 'Low Acid',
-      'price': 400000,
-      'weight': "60 kapsul",
-      'image':
-          'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80',
-    },
-  ];
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     context.read<ProductProvider>().fetchProducts();
+  //   });
+  // }
+
+  // final List<Map<String, dynamic>> coffeeList = [
+  //   {
+  //     'name': 'Sendifit',
+  //     'type': 'Sendi',
+  //     'price': 100000,
+  //     'weight': "60 kapsul",
+  //     'image':
+  //         'https://down-id.img.susercontent.com/file/id-11134208-7ra0s-mdcokz4a1dbsaa',
+  //   },
+  //   {
+  //     'name': 'Lambungku',
+  //     'type': 'Lambung',
+  //     'price': 200000,
+  //     'weight': "60 kapsul",
+  //     'image':
+  //         'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80',
+  //   },
+  //   {
+  //     'name': 'Latte Art',
+  //     'type': 'Double Shot',
+  //     'price': 300000,
+  //     'weight': "60 kapsul",
+  //     'image':
+  //         'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80',
+  //   },
+  //   {
+  //     'name': 'Cold Brew',
+  //     'type': 'Low Acid',
+  //     'price': 400000,
+  //     'weight': "60 kapsul",
+  //     'image':
+  //         'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80',
+  //   },
+  // ];
 
   // Data kita siapkan daftar kategori
   // final List<String> categories = [
@@ -81,6 +93,10 @@ class _HomePageState extends State<HomePage> {
     final categoryState = context.watch<CategoryProvider>();
     final categories = categoryState.categories;
     final theme = Theme.of(context);
+
+    final productState = context.watch<ProductProvider>();
+    final products = productState.products;
+
     // ukuran grid akan diatur lewat childAspectRatio saja agar responsif
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -232,45 +248,80 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 1),
-                  child: GridView.builder(
-                    itemCount: coffeeList.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.6,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 16,
-                    ),
-                    itemBuilder: (context, index) {
-                      final coffee = coffeeList[index];
-                      return GestureDetector(
-                        // Navigasik ke detail page
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  DetailPage(coffeData: coffee),
-                            ),
-                          );
-                        },
-                        child: ProductCard(
-                          name: coffeeList[index]['name'] as String,
-                          type: coffeeList[index]['type'] as String,
-                          price: coffeeList[index]['price'] as int,
-                          weight: coffeeList[index]['weight'] as String,
-                          imageUrl: coffeeList[index]['image'] as String,
+                child: Builder(
+                  builder: (_) {
+                    if (productState.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (productState.error != null) {
+                      return Center(
+                        child: TextButton(
+                          onPressed: () => productState.fetchProducts(),
+                          child: Text('Gagal memuat. Coba lagi'),
                         ),
                       );
-                    },
-                  ),
+                    }
+                    if (products.isEmpty) {
+                      return const Center(child: Text('Belum ada produk'));
+                    }
+                    return GridView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      itemCount: products.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.6,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 16,
+                          ),
+                      itemBuilder: (context, index) {
+                        final item = products[index];
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => DetailPage(
+                                  coffeData: {
+                                    'name': item.name,
+                                    'type': item.categories.isNotEmpty
+                                        ? item.categories.first.name
+                                        : '',
+                                    'price': item.price,
+                                    'weight': '${item.weight} gr',
+                                    'image':
+                                        item.primaryImage ??
+                                        (item.image.isNotEmpty
+                                            ? item.image.first
+                                            : ''),
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          child: ProductCard(
+                            name: item.name,
+                            type: item.categories.isNotEmpty
+                                ? item.categories.first.name
+                                : '',
+                            price: item.price.toInt(),
+                            weight: '${item.weight} gr',
+                            imageUrl:
+                                item.primaryImage ??
+                                (item.image.isNotEmpty ? item.image.first : ''),
+                            rating: 4.5,
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
-              const SizedBox(height: 10),
+
+              const SizedBox(height: 5),
             ],
           ),
         ),

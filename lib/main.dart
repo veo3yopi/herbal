@@ -1,19 +1,17 @@
-import 'package:coffe/features/auth/login_page.dart';
 import 'package:coffe/features/home/home_page.dart';
-import 'package:coffe/features/product/product_page.dart';
-import 'package:coffe/features/profile/profile_page.dart';
-import 'package:coffe/main_page.dart';
+import 'package:coffe/features/home/providers/category_provider.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'features/cart/cart_provider.dart';
-import 'theme/app_theme.dart';
+
 import 'core/theme_provider.dart';
 
 void main() {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (context) => CartProvider()),
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
       ],
@@ -39,7 +37,7 @@ class MyApp extends StatelessWidget {
           theme: ThemeProvider.lightTheme, // Kalau mode terang pakai ini
           darkTheme: ThemeProvider.darkTheme, // Kalau mode gelap pakai ini
 
-          home: const LoginPage(),
+          home: const HomePage(),
         );
       },
     );

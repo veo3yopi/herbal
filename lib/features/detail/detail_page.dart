@@ -24,7 +24,7 @@ class _DetailPageState extends State<DetailPage> {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final onSurface = theme.colorScheme.onSurface;
-    final muted = onSurface.withOpacity(0.65);
+    final muted = onSurface.withAlpha(65);
     final formatter = NumberFormat.currency(
       locale: 'id',
       symbol: 'Rp ',
@@ -47,7 +47,7 @@ class _DetailPageState extends State<DetailPage> {
                   height: 360,
                   width: double.infinity,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, StackTrace) =>
+                  errorBuilder: (context, error, stackTrace) =>
                       Container(height: 350, color: Colors.grey),
                 ),
               ),
@@ -225,7 +225,6 @@ class _DetailPageState extends State<DetailPage> {
                             content: Text(
                               "${coffee['name']} (Size $selectedSize) berhaisl ditambahkan!",
                             ),
-
                             backgroundColor: primary,
                             duration: const Duration(seconds: 1),
                           ),
@@ -261,7 +260,7 @@ class _DetailPageState extends State<DetailPage> {
     bool isSelected = selectedSize == size;
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    final muted = theme.colorScheme.onSurface.withOpacity(0.6);
+    final muted = theme.colorScheme.onSurface.withAlpha(60);
     return GestureDetector(
       onTap: () {
         setState(() {

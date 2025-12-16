@@ -16,7 +16,7 @@ class _CartPageState extends State<CartPage> {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final onSurface = theme.colorScheme.onSurface;
-    final muted = onSurface.withOpacity(0.65);
+    final muted = onSurface.withAlpha(60);
     final formatter = NumberFormat.currency(
       locale: 'id',
       symbol: 'Rp ',
@@ -138,7 +138,7 @@ class _CartPageState extends State<CartPage> {
                               vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceVariant,
+                              color: theme.colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
@@ -210,7 +210,6 @@ class _CartPageState extends State<CartPage> {
                       ),
                     ],
                   ),
-
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -323,7 +322,7 @@ class _CartPageState extends State<CartPage> {
           final theme = Theme.of(context);
           final primary = theme.colorScheme.primary;
           final onSurface = theme.colorScheme.onSurface;
-          final muted = onSurface.withOpacity(0.65);
+          final muted = onSurface.withAlpha(65);
           return AlertDialog(
             backgroundColor: theme.cardColor,
             shape: RoundedRectangleBorder(
@@ -348,7 +347,6 @@ class _CartPageState extends State<CartPage> {
                   style: TextStyle(color: muted),
                 ),
                 const SizedBox(height: 20),
-
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(

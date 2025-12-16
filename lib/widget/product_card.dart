@@ -1,6 +1,5 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 class ProductCard extends StatelessWidget {
   final String name;
@@ -25,7 +24,7 @@ class ProductCard extends StatelessWidget {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final onSurface = theme.colorScheme.onSurface;
-    final muted = onSurface.withOpacity(0.65);
+    final muted = onSurface.withAlpha(50);
 
     final formatter = NumberFormat.currency(
       locale: 'id',
@@ -39,7 +38,7 @@ class ProductCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withAlpha(40),
             blurRadius: 12,
             offset: const Offset(0, 6),
             spreadRadius: 2,

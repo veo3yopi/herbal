@@ -8,7 +8,6 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     var themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       body: SafeArea(
@@ -88,7 +87,6 @@ class ProfilePage extends StatelessWidget {
             _buildMenuItem(context, Icons.person, "Edit Profil"),
             _buildMenuItem(context, Icons.history, "Riwayat Pesanan"),
             _buildMenuItem(context, Icons.settings, "Pengaturan"),
-            const Spacer(),
 
             // Tombol Logout
             Padding(

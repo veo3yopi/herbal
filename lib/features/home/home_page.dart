@@ -1,9 +1,10 @@
+import 'package:coffe/features/home/providers/category_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../../widget/product_card.dart';
 import '../detail/detail_page.dart';
-import '../cart/cart_page.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,6 +14,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CategoryProvider>().fetchCategories();
+    });
+  }
+
   final List<Map<String, dynamic>> coffeeList = [
     {
       'name': 'Sendifit',
@@ -49,18 +58,18 @@ class _HomePageState extends State<HomePage> {
   ];
 
   // Data kita siapkan daftar kategori
-  final List<String> categories = [
-    "Capuccino",
-    "Espersso",
-    "Latte",
-    "Flat White",
-    "Cold Brew",
-    "Cold Brew",
+  // final List<String> categories = [
+  //   "Capuccino",
+  //   "Espersso",
+  //   "Latte",
+  //   "Flat White",
+  //   "Cold Brew",
+  //   "Cold Brew",
 
-    "Cold Brew",
+  //   "Cold Brew",
 
-    "Cold Brew",
-  ];
+  //   "Cold Brew",
+  // ];
 
   // state menyimpan index kategori yang sedang dipilih
   //  0 artinya kategori pertama ("Cappuccino") otomatis terpilih
@@ -69,6 +78,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final categoryState = context.watch<CategoryProvider>();
+    final categories = categoryState.categories;
     final theme = Theme.of(context);
     // ukuran grid akan diatur lewat childAspectRatio saja agar responsif
     return Scaffold(
@@ -156,41 +167,67 @@ class _HomePageState extends State<HomePage> {
               // placeholder untuk konten selanjutnya
               SizedBox(
                 height: 40,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      // Logika klik : ubah stat index terpilhi
-                      onTap: () {
-                        setState(() {
-                          _selectedIndex = index;
-                        });
+
+                // category
+                child: Builder(
+                  builder: (_) {
+                    if (categoryState.isLoading) {
+                      return const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      );
+                    }
+                    if (categoryState.error != null) {
+                      return Center(
+                        child: TextButton(
+                          onPressed: () {
+                            categoryState.fetchCategories();
+                          },
+                          child: const Text('Ulangi'),
+                        ),
+                      );
+                    }
+                    if (categories.isEmpty) {
+                      return const Center(child: Text('Belum ada kategory'));
+                    }
+                    return ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: categories.length,
+                      itemBuilder: (context, index) {
+                        final category = categories[index];
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedIndex = index;
+                            });
+                          },
+                          child: Container(
+                            margin: EdgeInsets.only(
+                              left: index == 0 ? 25 : 10,
+                              right: index == categories.length - 1 ? 25 : 0,
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            decoration: BoxDecoration(
+                              color: _selectedIndex == index
+                                  ? theme.colorScheme.primary
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: _selectedIndex == index
+                                  ? null
+                                  : Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: Center(
+                              child: Text(
+                                category.name,
+                                style: TextStyle(
+                                  color: _selectedIndex == index
+                                      ? Colors.white
+                                      : Colors.black87,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
                       },
-                      child: Container(
-                        margin: EdgeInsets.only(
-                          left: index == 0
-                              ? 25
-                              : 10, // memberi jarak kiri untuk item pertama
-                          right: index == categories.length - 1
-                              ? 25
-                              : 0, //  jarak kanan item terakhir
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        decoration: BoxDecoration(
-                          // Logika warna
-                          // jika index ini sama denga yang dipilih -> warna Orange
-                          // jika tika ->warna putih
-                          color: _selectedIndex == index
-                              ? theme.colorScheme.primary
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          // tambahkan border tipis jika tidk dipilih
-                          border: _selectedIndex == index
-                              ? null
-                              : Border.all(color: Colors.grey.shade300),
-                        ),
-                      ),
                     );
                   },
                 ),

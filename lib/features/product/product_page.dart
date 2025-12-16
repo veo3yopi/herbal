@@ -102,7 +102,6 @@ class _ProductPageState extends State<ProductPage> {
               child: GridView.builder(
                 padding: EdgeInsets.symmetric(horizontal: 12),
                 itemCount: filtered.length,
-
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   childAspectRatio: 0.6,

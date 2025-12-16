@@ -1,6 +1,5 @@
 import 'package:coffe/main_page.dart';
 import 'package:flutter/material.dart';
-import '../home/home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final onSurface = theme.colorScheme.onSurface;
-    final muted = onSurface.withOpacity(0.65);
+    final muted = onSurface.withAlpha(60);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,

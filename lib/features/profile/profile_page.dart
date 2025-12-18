@@ -1,3 +1,4 @@
+import 'package:coffe/features/profile/edit_profile_page.dart';
 import 'package:flutter/material.dart';
 import '../auth/login_page.dart';
 import 'package:provider/provider.dart';
@@ -150,7 +151,12 @@ class ProfilePage extends StatelessWidget {
             size: 16,
             color: Colors.grey,
           ),
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => EditProfilePage()),
+            );
+          },
         ),
       ),
     );

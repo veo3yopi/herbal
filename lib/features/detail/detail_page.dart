@@ -1,293 +1,270 @@
+import 'package:coffe/data/models/product_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../cart/cart_provider.dart';
-// import 'package:cached_network_image/cached_network_image.dart';
 import '../cart/cart_page.dart';
+import '../cart/cart_provider.dart';
+import 'package:flutter_html/flutter_html.dart';
 
 class DetailPage extends StatefulWidget {
-  // kita butuh data dari halaman  home
-  final Map<String, dynamic> coffeData;
-
-  const DetailPage({super.key, required this.coffeData});
+  final ProductModel product;
+  const DetailPage({super.key, required this.product});
 
   @override
   State<DetailPage> createState() => _DetailPageState();
 }
 
 class _DetailPageState extends State<DetailPage> {
-  // Stat untuk pilhan ukuran gelas
-  String selectedSize = 'M';
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final onSurface = theme.colorScheme.onSurface;
     final muted = onSurface.withAlpha(65);
+
+    // ambil data dari widget
+    final product = widget.product;
     final formatter = NumberFormat.currency(
       locale: 'id',
       symbol: 'Rp ',
       decimalDigits: 0,
     );
-    // ambil data dari widget
-    var coffee = widget.coffeData;
+
+    final imageUrl =
+        product.primaryImage ??
+        (product.image.isNotEmpty ? product.image.first : '');
+    // final plainDescription = product.description
+    //     .replaceAll(RegExp(r'<[^>]*>'), '')
+    //     .trim();
+
+    final htmlDesc = (product.description).isNotEmpty
+        ? product.description
+        : "<p>-</p>";
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: Column(
-        children: [
-          // Gambar header
-          Stack(
-            children: [
-              // gambar besar
-              Hero(
-                tag: coffee['name']!,
-                child: Image.network(
-                  coffee['image']!,
-                  height: 360,
-                  width: double.infinity,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(height: 350, color: Colors.grey),
-                ),
-              ),
-              // Tombol back & favorite (diatas gambar)
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Tombol Back Bulat
-                      CircleAvatar(
-                        backgroundColor: Colors.black.withAlpha(50),
-                        child: IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      // bomol love bulat
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.black.withAlpha(50),
-                            child: IconButton(
-                              onPressed: () {},
-                              icon: const Icon(
-                                Icons.favorite_border,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          CircleAvatar(
-                            backgroundColor: Colors.black.withAlpha(50),
-                            child: IconButton(
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => CartPage(),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(
-                                Icons.shopping_cart,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Stack(
+              children: [
+                Hero(
+                  tag: product.name,
+                  child: Image.network(
+                    imageUrl.isNotEmpty
+                        ? imageUrl
+                        : 'https://via.placeholder.com/400',
+                    height: 360,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
                   ),
                 ),
-              ),
-            ],
-          ),
-
-          //  bagian 2: Detail informasi
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(25),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                // membuat efek melengkung ke atas menutupi sedikit gambar
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(40),
-                  topRight: Radius.circular(40),
-                ),
-              ),
-              // Geser container katas sedikit (-30) agar menumpuk gambar
-              transform: Matrix4.translationValues(0, -40, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Judul & harga
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                coffee['name']!,
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: onSurface,
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.black.withAlpha(50),
+                          child: IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.black.withAlpha(50),
+                              child: IconButton(
+                                onPressed: () {},
+                                icon: const Icon(
+                                  Icons.favorite_border,
+                                  color: Colors.white,
                                 ),
                               ),
-                              Text(
-                                coffee['type']!,
-                                style: TextStyle(fontSize: 14, color: muted),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      Text(
-                        formatter.format(coffee['price']),
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 25),
-                  Text(
-                    'Description',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Nikmati sensasi kopi pilihan terbaik yang diseduh dengan teknik khusus untuk menghasilkan rasa yang kaya dan aroma yang memikat.",
-                    style: TextStyle(color: muted, height: 1.5),
-                  ),
-                  const SizedBox(height: 25),
-                  Text(
-                    'Size',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Pilihan ukuran ( S, M, L)
-                  Row(
-                    children: [
-                      _buildSizeButton("S"),
-                      _buildSizeButton("M"),
-                      _buildSizeButton("L"),
-                    ],
-                  ),
-                  const Spacer(),
-
-                  // Tombol beli
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // 1 . panggil provider (Si Tukang catatnya)
-                        // Listen: false artinya kita cuma mau suruh di acate,
-                        // ktia tidak perlu dengar balasan rebuild halaman ini
-                        var cart = Provider.of<CartProvider>(
-                          context,
-                          listen: false,
-                        );
-
-                        // 2. Suruh dia measukan barang ini
-                        cart.addToCart(
-                          {
-                            'name': coffee['name']!,
-                            'price': coffee['price'] as int,
-                            'image': coffee['image']!,
-                          },
-
-                          selectedSize, // ukuran yang di plih user
-                        );
-
-                        //  3. Beri info ke user kalau sudah berhasil
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "${coffee['name']} (Size $selectedSize) berhaisl ditambahkan!",
                             ),
-                            backgroundColor: primary,
-                            duration: const Duration(seconds: 1),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                            const SizedBox(width: 10),
+                            CircleAvatar(
+                              backgroundColor: Colors.black.withAlpha(50),
+                              child: IconButton(
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => const CartPage(),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(
+                                  Icons.shopping_cart,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Transform.translate(
+              offset: const Offset(0, -40),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(25),
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(40),
+                    topRight: Radius.circular(40),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            product.name,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: onSurface,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          formatter.format(product.price),
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 25),
+                    Text(
+                      'Description',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: onSurface,
                       ),
-                      child: const Text(
-                        'Add to Cart',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                    ),
+                    const SizedBox(height: 10),
+
+                    Html(
+                      data: htmlDesc,
+                      style: {
+                        "body": Style(
+                          color: muted,
+                          fontSize: FontSize(14),
+                          lineHeight: LineHeight.number(1.5),
+                        ),
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _infoChip(
+                          context,
+                          label: 'Berat',
+                          value: '${product.weight} gr',
+                        ),
+                        _infoChip(
+                          context,
+                          label: 'Stok',
+                          value: product.stock.toString(),
+                        ),
+                        _infoChip(
+                          context,
+                          label: 'Kategori',
+                          value: product.categories.isNotEmpty
+                              ? product.categories.first.name
+                              : '-',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final cart = Provider.of<CartProvider>(
+                            context,
+                            listen: false,
+                          );
+                          cart.addToCart(product);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                "${product.name} berhasil ditambahkan!",
+                              ),
+                              backgroundColor: primary,
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: const Text(
+                          'Add to Cart',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  // widget kecil ntuk membuat tombolukuran biar kodenya rapi
-  Widget _buildSizeButton(String size) {
-    bool isSelected = selectedSize == size;
+  Widget _infoChip(
+    BuildContext context, {
+    required String label,
+    required String value,
+  }) {
     final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    final muted = theme.colorScheme.onSurface.withAlpha(60);
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedSize = size;
-        });
-      },
-      child: Container(
-        margin: const EdgeInsets.only(right: 15),
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          color: isSelected ? primary : theme.cardColor,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(
-            color: isSelected ? Colors.transparent : Colors.grey.shade300,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: theme.colorScheme.onSurface.withOpacity(0.6),
+            fontSize: 12,
           ),
         ),
-        child: Center(
-          child: Text(
-            size,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.white : muted,
-            ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
           ),
         ),
-      ),
+      ],
     );
   }
 }

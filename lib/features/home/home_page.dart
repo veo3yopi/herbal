@@ -284,21 +284,7 @@ class _HomePageState extends State<HomePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => DetailPage(
-                                  coffeData: {
-                                    'name': item.name,
-                                    'type': item.categories.isNotEmpty
-                                        ? item.categories.first.name
-                                        : '',
-                                    'price': item.price,
-                                    'weight': '${item.weight} gr',
-                                    'image':
-                                        item.primaryImage ??
-                                        (item.image.isNotEmpty
-                                            ? item.image.first
-                                            : ''),
-                                  },
-                                ),
+                                builder: (_) => DetailPage(product: item),
                               ),
                             );
                           },

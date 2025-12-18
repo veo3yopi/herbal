@@ -1,62 +1,43 @@
+import 'package:coffe/data/models/product_model.dart';
 import 'package:flutter/material.dart';
 
-// ChangeNotifier adalah fitur bawaan Flutter untuk "mengabarkan" perubahan data
 class CartProvider extends ChangeNotifier {
-  // 1. Data rahasia (list keranjang)
-  // kita buat private (_items) atar tidak bisa di acak-acak langsung dari luar
   final List<Map<String, dynamic>> _items = [];
 
-  // Gatter: Agar halmaan lain bisa BACA data, tapi tidak bisa ubah paksa
   List<Map<String, dynamic>> get items => _items;
 
-  // Gatter: Menghitung Total Halaman otomatis
   int get totalPrice {
     int total = 0;
-    for (var item in _items) {
-      final int price = item['price'] as int;
-      total += price * (item['qty'] as int);
+    for (final item in _items) {
+      final product = item['product'] as ProductModel;
+      final qty = item['qty'] as int;
+      total += product.price.toInt() * qty;
     }
     return total;
   }
 
-  // 2. Aksi : tambah ke keranjang
-  void addToCart(Map<String, dynamic> product, String size) {
-    final int price = product['price'] is int
-        ? product['price'] as int
-        : int.tryParse(product['price'].toString()) ?? 0;
-    // cek apakah produk dengan nama & ukurna ang sama sudah ada ?
-    int index = _items.indexWhere(
-      (item) => item['name'] == product['name'] && item['size'] == size,
+  void addToCart(ProductModel product) {
+    final index = _items.indexWhere(
+      (item) => (item['product'] as ProductModel).id == product.id,
     );
     if (index != -1) {
-      // jika sudah ada, kita tambahkan jumlahnya (Qty+1)
       _items[index]['qty'] = (_items[index]['qty'] as int) + 1;
     } else {
-      // jika belum ada, masukansebagai baran baru
-      _items.add({
-        'name': product['name'],
-        'price': price,
-        'image': product['image'],
-        'size': size,
-        'qty': 1,
-      });
+      _items.add({'product': product, 'qty': 1});
     }
-
-    //  Pengint; bunyikan "lonceng" agar semu halaman updat tampilannya
     notifyListeners();
   }
 
-  // 3. Aksi hapus / kurang
   void removeItem(int index) {
-    if (_items[index]['qty'] > 1) {
-      _items[index]['qty'] = (_items[index]['qty'] as int) - 1;
+    final currentQty = _items[index]['qty'] as int;
+    if (currentQty > 1) {
+      _items[index]['qty'] = currentQty - 1;
     } else {
       _items.removeAt(index);
     }
     notifyListeners();
   }
 
-  // 4. aksei bersihkan keranjang
   void clearCart() {
     _items.clear();
     notifyListeners();

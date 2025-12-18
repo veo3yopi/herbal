@@ -1,3 +1,4 @@
+import 'package:coffe/data/models/product_model.dart';
 import 'package:coffe/features/cart/cart_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -75,6 +76,13 @@ class _CartPageState extends State<CartPage> {
                   itemCount: cartItems.length,
                   itemBuilder: (context, index) {
                     final item = cartItems[index];
+                    final product = item['product'] as ProductModel;
+                    final qty = item['qty'] as int;
+                    final imageUrl = product.primaryImage ??
+                        (product.image.isNotEmpty ? product.image.first : '');
+                    final description = product.description
+                        .replaceAll(RegExp(r'<[^>]*>'), '')
+                        .trim();
                     return Container(
                       margin: const EdgeInsets.only(bottom: 20),
                       padding: const EdgeInsets.all(15),
@@ -95,7 +103,9 @@ class _CartPageState extends State<CartPage> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(15),
                             child: Image.network(
-                              item['image'],
+                              imageUrl.isNotEmpty
+                                  ? imageUrl
+                                  : 'https://via.placeholder.com/150',
                               width: 70,
                               height: 70,
                               fit: BoxFit.cover,
@@ -109,20 +119,26 @@ class _CartPageState extends State<CartPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  item['name'],
+                                  product.name,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                     color: onSurface,
                                   ),
                                 ),
-                                Text(
-                                  "Size: ${item["size"]}",
-                                  style: TextStyle(color: muted, fontSize: 12),
-                                ),
+                                if (description.isNotEmpty)
+                                  Text(
+                                    description,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: muted,
+                                      fontSize: 12,
+                                    ),
+                                  ),
                                 const SizedBox(height: 5),
                                 Text(
-                                  formatter.format(item["price"] as int),
+                                  formatter.format(product.price.toInt()),
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: primary,
@@ -160,7 +176,7 @@ class _CartPageState extends State<CartPage> {
                                     horizontal: 10,
                                   ),
                                   child: Text(
-                                    "${item['qty']}",
+                                    "$qty",
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -169,12 +185,7 @@ class _CartPageState extends State<CartPage> {
                                 // TOMBOL TAMBAH
                                 GestureDetector(
                                   onTap: () {
-                                    // panggil fungsi profivder add to cart
-                                    cartProvider.addToCart({
-                                      'name': item['name'],
-                                      'price': item['price'],
-                                      'image': item['image'],
-                                    }, item['size']);
+                                    cartProvider.addToCart(product);
                                   },
                                   child: const Icon(
                                     Icons.add,

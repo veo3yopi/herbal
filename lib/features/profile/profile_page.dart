@@ -1,15 +1,19 @@
-import 'package:coffe/features/profile/edit_profile_page.dart';
 import 'package:flutter/material.dart';
-import '../auth/login_page.dart';
 import 'package:provider/provider.dart';
+
 import '../../core/theme_provider.dart';
+import '../auth/auth_provider.dart';
+import '../auth/login_page.dart';
+import 'edit_profile_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    var themeProvider = Provider.of<ThemeProvider>(context);
+    final themeProvider = context.watch<ThemeProvider>();
+    final auth = context.watch<AuthProvider>();
+    final user = auth.user;
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -34,13 +38,15 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             // Nama user
-            const Text(
-              "Akhir Project",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Text(
+              user?['name'] ?? 'Pengguna',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
             ),
-            const Text(
-              "admin@mail.com",
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+            Text(
+              user?['phone'] ?? '-',
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 50),
             // Menu mode gelap
@@ -85,7 +91,17 @@ class ProfilePage extends StatelessWidget {
               ),
             ),
             // MENU SETTING
-            _buildMenuItem(context, Icons.person, "Edit Profil"),
+            _buildMenuItem(
+              context,
+              Icons.person,
+              "Edit Profil",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const EditProfilePage()),
+                );
+              },
+            ),
             _buildMenuItem(context, Icons.history, "Riwayat Pesanan"),
             _buildMenuItem(context, Icons.settings, "Pengaturan"),
 
@@ -97,12 +113,10 @@ class ProfilePage extends StatelessWidget {
                 height: 55,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // Logika logout
+                    auth.logout();
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
                       (route) => false,
                     );
                   },
@@ -122,7 +136,12 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(BuildContext context, IconData icon, String text) {
+  Widget _buildMenuItem(
+    BuildContext context,
+    IconData icon,
+    String text, {
+    VoidCallback? onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       child: Container(
@@ -151,12 +170,7 @@ class ProfilePage extends StatelessWidget {
             size: 16,
             color: Colors.grey,
           ),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => EditProfilePage()),
-            );
-          },
+          onTap: onTap,
         ),
       ),
     );

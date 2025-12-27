@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme_provider.dart';
 import '../auth/auth_provider.dart';
 import '../auth/login_page.dart';
+import 'address_page.dart';
 import 'edit_profile_page.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -102,6 +104,17 @@ class ProfilePage extends StatelessWidget {
                 );
               },
             ),
+            _buildMenuItem(
+              context,
+              Icons.location_on,
+              "Alamat Saya",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddressPage()),
+                );
+              },
+            ),
             _buildMenuItem(context, Icons.history, "Riwayat Pesanan"),
             _buildMenuItem(context, Icons.settings, "Pengaturan"),
 
@@ -112,21 +125,41 @@ class ProfilePage extends StatelessWidget {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    auth.logout();
+                  onPressed: () async {
+                    final error = await auth.logout();
+                    if (!context.mounted) return;
+                    if (error != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error)),
+                      );
+                      return;
+                    }
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(builder: (_) => const LoginPage()),
                       (route) => false,
                     );
                   },
+                  icon: const Icon(Icons.logout, color: Colors.red),
                   label: const Text(
-                    "Keluar Aplikasi ",
+                    "Logout Akun",
                     style: TextStyle(
                       color: Colors.red,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25),
+              child: SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: OutlinedButton.icon(
+                  onPressed: () => SystemNavigator.pop(),
+                  icon: const Icon(Icons.exit_to_app),
+                  label: const Text("Keluar Aplikasi"),
                 ),
               ),
             ),

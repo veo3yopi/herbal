@@ -39,4 +39,13 @@ class AuthService {
     );
     return response.data as Map<String, dynamic>;
   }
+
+  Future<void> logout({required String token}) async {
+    await _dio.post(
+      '/api/v1/auth/logout',
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+      ),
+    );
+  }
 }

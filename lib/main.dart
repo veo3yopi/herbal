@@ -6,18 +6,32 @@ import 'features/auth/login_page.dart';
 import 'features/home/providers/category_provider.dart';
 import 'features/home/providers/product_provider.dart';
 import 'features/cart/cart_provider.dart';
+import 'features/profile/providers/address_provider.dart';
 import 'main_page.dart';
 import 'core/theme_provider.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final themeProvider = ThemeProvider();
+  final authProvider = AuthProvider();
+  await themeProvider.loadTheme();
+  await authProvider.loadSession();
+
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, AddressProvider>(
+          create: (_) => AddressProvider(),
+          update: (_, auth, addressProvider) {
+            addressProvider?.setToken(auth.token);
+            return addressProvider ?? AddressProvider();
+          },
+        ),
+        ChangeNotifierProvider.value(value: themeProvider),
       ],
       child: const MyApp(),
     ),

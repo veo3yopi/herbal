@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/models/address_model.dart';
@@ -35,6 +38,7 @@ class _AddAddressPageState extends State<AddAddressPage> {
   final _longitudeController = TextEditingController();
 
   bool _isDefault = false;
+  bool _isFetchingLocation = false;
   int? _selectedProvinceId;
   int? _selectedCityId;
   int? _selectedDistrictId;
@@ -135,6 +139,7 @@ class _AddAddressPageState extends State<AddAddressPage> {
               _districtField(districtProvider, theme),
               _subDistrictField(subDistrictProvider, theme),
               _field(_postalCodeController, 'Kode Pos'),
+              _locationButton(theme),
               _field(_latitudeController, 'Latitude'),
               _field(_longitudeController, 'Longitude'),
               SwitchListTile(
@@ -172,6 +177,85 @@ class _AddAddressPageState extends State<AddAddressPage> {
     );
   }
 
+  Widget _locationButton(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: OutlinedButton.icon(
+          onPressed: _isFetchingLocation ? null : _fetchLocation,
+          icon: _isFetchingLocation
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.my_location),
+          label: Text(
+            _isFetchingLocation ? 'Mengambil lokasi...' : 'Gunakan Lokasi Saat Ini',
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _fetchLocation() async {
+    setState(() => _isFetchingLocation = true);
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _showMessage('Layanan lokasi belum aktif. Buka pengaturan.');
+        await Geolocator.openLocationSettings();
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied) {
+        _showMessage('Izin lokasi ditolak.');
+        return;
+      }
+      if (permission == LocationPermission.deniedForever) {
+        _showMessage('Izin lokasi ditolak permanen. Buka pengaturan.');
+        await Geolocator.openAppSettings();
+        return;
+      }
+
+      Position? position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 10),
+        );
+      } on TimeoutException {
+        position = await Geolocator.getLastKnownPosition();
+      }
+
+      if (position == null) {
+        _showMessage('Lokasi tidak tersedia. Coba lagi.');
+        return;
+      }
+      _latitudeController.text = position.latitude.toString();
+      _longitudeController.text = position.longitude.toString();
+    } catch (e) {
+      _showMessage('Gagal mengambil lokasi: ${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() => _isFetchingLocation = false);
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   Widget _provinceField(ProvinceProvider provinceProvider, ThemeData theme) {
     if (provinceProvider.isLoading) {
       return const Padding(
@@ -199,65 +283,48 @@ class _AddAddressPageState extends State<AddAddressPage> {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: DropdownButtonFormField<int>(
-        initialValue: _selectedProvinceId,
-        items: provinceProvider.provinces
-            .map(
-              (province) => DropdownMenuItem<int>(
-                value: province.id,
-                child: Text(province.name),
-              ),
-            )
-            .toList(),
-        decoration: const InputDecoration(labelText: 'Provinsi'),
-        onChanged: (value) {
-          setState(() {
-            _selectedProvinceId = value;
-            final selected = provinceProvider.provinces.firstWhere(
-              (item) => item.id == value,
-            );
-            _provinceIdController.text = selected.id.toString();
-            _provinceNameController.text = selected.name;
-            _selectedCityId = null;
-            _cityIdController.clear();
-            _cityNameController.clear();
-            _selectedDistrictId = null;
-            _districtIdController.clear();
-            _districtNameController.clear();
-            _selectedSubDistrictId = null;
-            _subDistrictIdController.clear();
-            _subDistrictNameController.clear();
-            _postalCodeController.clear();
-          });
-          if (value != null) {
-            context.read<CityProvider>().fetchCities(provinceId: value);
-            context.read<DistrictProvider>().clear();
-            context.read<SubDistrictProvider>().clear();
-          } else {
-            context.read<CityProvider>().clear();
-            context.read<DistrictProvider>().clear();
-            context.read<SubDistrictProvider>().clear();
-          }
-        },
-        validator: (value) => value == null ? 'Pilih provinsi' : null,
-      ),
+    return _searchableField(
+      label: 'Provinsi',
+      controller: _provinceNameController,
+      enabled: true,
+      hint: 'Pilih provinsi',
+      validator: (_) => _selectedProvinceId == null ? 'Pilih provinsi' : null,
+      onTap: () async {
+        final selected = await _openSearchSheet(
+          title: 'Pilih Provinsi',
+          items: provinceProvider.provinces,
+          itemLabel: (item) => item.name,
+        );
+        if (selected == null) return;
+        setState(() {
+          _selectedProvinceId = selected.id;
+          _provinceIdController.text = selected.id.toString();
+          _provinceNameController.text = selected.name;
+          _selectedCityId = null;
+          _cityIdController.clear();
+          _cityNameController.clear();
+          _selectedDistrictId = null;
+          _districtIdController.clear();
+          _districtNameController.clear();
+          _selectedSubDistrictId = null;
+          _subDistrictIdController.clear();
+          _subDistrictNameController.clear();
+          _postalCodeController.clear();
+        });
+        context.read<CityProvider>().fetchCities(provinceId: selected.id);
+        context.read<DistrictProvider>().clear();
+        context.read<SubDistrictProvider>().clear();
+      },
     );
   }
 
   Widget _cityField(CityProvider cityProvider, ThemeData theme) {
     if (_selectedProvinceId == null) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 14),
-        child: TextFormField(
-          enabled: false,
-          decoration: const InputDecoration(
-            labelText: 'Kota/Kabupaten',
-            hintText: 'Pilih provinsi terlebih dahulu',
-            suffixIcon: Icon(Icons.arrow_drop_down),
-          ),
-        ),
+      return _searchableField(
+        label: 'Kota/Kabupaten',
+        controller: _cityNameController,
+        enabled: false,
+        hint: 'Pilih provinsi terlebih dahulu',
       );
     }
     if (cityProvider.isLoading) {
@@ -295,60 +362,45 @@ class _AddAddressPageState extends State<AddAddressPage> {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: DropdownButtonFormField<int>(
-        initialValue: _selectedCityId,
-        items: cityProvider.cities
-            .map(
-              (city) => DropdownMenuItem<int>(
-                value: city.id,
-                child: Text(city.name),
-              ),
-            )
-            .toList(),
-        decoration: const InputDecoration(labelText: 'Kota/Kabupaten'),
-        onChanged: (value) {
-          setState(() {
-            _selectedCityId = value;
-            final selected = cityProvider.cities.firstWhere(
-              (item) => item.id == value,
-            );
-            _cityIdController.text = selected.id.toString();
-            _cityNameController.text = selected.name;
-            _selectedDistrictId = null;
-            _districtIdController.clear();
-            _districtNameController.clear();
-            _selectedSubDistrictId = null;
-            _subDistrictIdController.clear();
-            _subDistrictNameController.clear();
-            _postalCodeController.clear();
-          });
-          if (value != null) {
-            context.read<DistrictProvider>().fetchDistricts(cityId: value);
-            context.read<SubDistrictProvider>().clear();
-          } else {
-            context.read<DistrictProvider>().clear();
-            context.read<SubDistrictProvider>().clear();
-          }
-        },
-        validator: (value) => value == null ? 'Pilih kota/kabupaten' : null,
-      ),
+    return _searchableField(
+      label: 'Kota/Kabupaten',
+      controller: _cityNameController,
+      enabled: true,
+      hint: 'Pilih kota/kabupaten',
+      validator: (_) =>
+          _selectedCityId == null ? 'Pilih kota/kabupaten' : null,
+      onTap: () async {
+        final selected = await _openSearchSheet(
+          title: 'Pilih Kota/Kabupaten',
+          items: cityProvider.cities,
+          itemLabel: (item) => item.name,
+        );
+        if (selected == null) return;
+        setState(() {
+          _selectedCityId = selected.id;
+          _cityIdController.text = selected.id.toString();
+          _cityNameController.text = selected.name;
+          _selectedDistrictId = null;
+          _districtIdController.clear();
+          _districtNameController.clear();
+          _selectedSubDistrictId = null;
+          _subDistrictIdController.clear();
+          _subDistrictNameController.clear();
+          _postalCodeController.clear();
+        });
+        context.read<DistrictProvider>().fetchDistricts(cityId: selected.id);
+        context.read<SubDistrictProvider>().clear();
+      },
     );
   }
 
   Widget _districtField(DistrictProvider districtProvider, ThemeData theme) {
     if (_selectedCityId == null) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 14),
-        child: TextFormField(
-          enabled: false,
-          decoration: const InputDecoration(
-            labelText: 'Kecamatan',
-            hintText: 'Pilih kota/kabupaten terlebih dahulu',
-            suffixIcon: Icon(Icons.arrow_drop_down),
-          ),
-        ),
+      return _searchableField(
+        label: 'Kecamatan',
+        controller: _districtNameController,
+        enabled: false,
+        hint: 'Pilih kota/kabupaten terlebih dahulu',
       );
     }
     if (districtProvider.isLoading) {
@@ -386,42 +438,33 @@ class _AddAddressPageState extends State<AddAddressPage> {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: DropdownButtonFormField<int>(
-        initialValue: _selectedDistrictId,
-        items: districtProvider.districts
-            .map(
-              (district) => DropdownMenuItem<int>(
-                value: district.id,
-                child: Text(district.name),
-              ),
-            )
-            .toList(),
-        decoration: const InputDecoration(labelText: 'Kecamatan'),
-        onChanged: (value) {
-          setState(() {
-            _selectedDistrictId = value;
-            final selected = districtProvider.districts.firstWhere(
-              (item) => item.id == value,
-            );
-            _districtIdController.text = selected.id.toString();
-            _districtNameController.text = selected.name;
-            _selectedSubDistrictId = null;
-            _subDistrictIdController.clear();
-            _subDistrictNameController.clear();
-            _postalCodeController.clear();
-          });
-          if (value != null) {
-            context.read<SubDistrictProvider>().fetchSubDistricts(
-              districtId: value,
-            );
-          } else {
-            context.read<SubDistrictProvider>().clear();
-          }
-        },
-        validator: (value) => value == null ? 'Pilih kecamatan' : null,
-      ),
+    return _searchableField(
+      label: 'Kecamatan',
+      controller: _districtNameController,
+      enabled: true,
+      hint: 'Pilih kecamatan',
+      validator: (_) =>
+          _selectedDistrictId == null ? 'Pilih kecamatan' : null,
+      onTap: () async {
+        final selected = await _openSearchSheet(
+          title: 'Pilih Kecamatan',
+          items: districtProvider.districts,
+          itemLabel: (item) => item.name,
+        );
+        if (selected == null) return;
+        setState(() {
+          _selectedDistrictId = selected.id;
+          _districtIdController.text = selected.id.toString();
+          _districtNameController.text = selected.name;
+          _selectedSubDistrictId = null;
+          _subDistrictIdController.clear();
+          _subDistrictNameController.clear();
+          _postalCodeController.clear();
+        });
+        context.read<SubDistrictProvider>().fetchSubDistricts(
+          districtId: selected.id,
+        );
+      },
     );
   }
 
@@ -430,16 +473,11 @@ class _AddAddressPageState extends State<AddAddressPage> {
     ThemeData theme,
   ) {
     if (_selectedDistrictId == null) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 14),
-        child: TextFormField(
-          enabled: false,
-          decoration: const InputDecoration(
-            labelText: 'Kelurahan',
-            hintText: 'Pilih kecamatan terlebih dahulu',
-            suffixIcon: Icon(Icons.arrow_drop_down),
-          ),
-        ),
+      return _searchableField(
+        label: 'Kelurahan',
+        controller: _subDistrictNameController,
+        enabled: false,
+        hint: 'Pilih kecamatan terlebih dahulu',
       );
     }
     if (subDistrictProvider.isLoading) {
@@ -477,32 +515,128 @@ class _AddAddressPageState extends State<AddAddressPage> {
       );
     }
 
+    return _searchableField(
+      label: 'Kelurahan',
+      controller: _subDistrictNameController,
+      enabled: true,
+      hint: 'Pilih kelurahan',
+      validator: (_) =>
+          _selectedSubDistrictId == null ? 'Pilih kelurahan' : null,
+      onTap: () async {
+        final selected = await _openSearchSheet(
+          title: 'Pilih Kelurahan',
+          items: subDistrictProvider.subDistricts,
+          itemLabel: (item) => item.name,
+        );
+        if (selected == null) return;
+        setState(() {
+          _selectedSubDistrictId = selected.id;
+          _subDistrictIdController.text = selected.id.toString();
+          _subDistrictNameController.text = selected.name;
+          _postalCodeController.text = selected.postalCode;
+        });
+      },
+    );
+  }
+
+  Widget _searchableField({
+    required String label,
+    required TextEditingController controller,
+    required bool enabled,
+    required String hint,
+    VoidCallback? onTap,
+    String? Function(String?)? validator,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
-      child: DropdownButtonFormField<int>(
-        initialValue: _selectedSubDistrictId,
-        items: subDistrictProvider.subDistricts
-            .map(
-              (subDistrict) => DropdownMenuItem<int>(
-                value: subDistrict.id,
-                child: Text(subDistrict.name),
-              ),
-            )
-            .toList(),
-        decoration: const InputDecoration(labelText: 'Kelurahan'),
-        onChanged: (value) {
-          setState(() {
-            _selectedSubDistrictId = value;
-            final selected = subDistrictProvider.subDistricts.firstWhere(
-              (item) => item.id == value,
-            );
-            _subDistrictIdController.text = selected.id.toString();
-            _subDistrictNameController.text = selected.name;
-            _postalCodeController.text = selected.postalCode;
-          });
-        },
-        validator: (value) => value == null ? 'Pilih kelurahan' : null,
+      child: TextFormField(
+        controller: controller,
+        readOnly: true,
+        enabled: enabled,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          suffixIcon: const Icon(Icons.arrow_drop_down),
+        ),
+        onTap: enabled ? onTap : null,
+        validator: validator,
       ),
+    );
+  }
+
+  Future<T?> _openSearchSheet<T>({
+    required String title,
+    required List<T> items,
+    required String Function(T) itemLabel,
+  }) async {
+    return showModalBottomSheet<T>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        final searchController = TextEditingController();
+        var filtered = items;
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            void applyFilter(String query) {
+              final q = query.trim().toLowerCase();
+              setModalState(() {
+                filtered = q.isEmpty
+                    ? items
+                    : items
+                        .where(
+                          (item) => itemLabel(item).toLowerCase().contains(q),
+                        )
+                        .toList();
+              });
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: searchController,
+                    onChanged: applyFilter,
+                    decoration: const InputDecoration(
+                      hintText: 'Cari...',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Flexible(
+                    child: filtered.isEmpty
+                        ? const Text('Tidak ada hasil')
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final item = filtered[index];
+                              return ListTile(
+                                title: Text(itemLabel(item)),
+                                onTap: () => Navigator.pop(context, item),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

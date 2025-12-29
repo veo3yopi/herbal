@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../../data/models/address_model.dart';
 import 'providers/address_provider.dart';
 import 'providers/city_provider.dart';
+import 'providers/district_provider.dart';
 import 'providers/province_provider.dart';
+import 'providers/sub_district_provider.dart';
 
 class AddAddressPage extends StatefulWidget {
   const AddAddressPage({super.key});
@@ -35,6 +37,8 @@ class _AddAddressPageState extends State<AddAddressPage> {
   bool _isDefault = false;
   int? _selectedProvinceId;
   int? _selectedCityId;
+  int? _selectedDistrictId;
+  int? _selectedSubDistrictId;
 
   @override
   void initState() {
@@ -106,6 +110,8 @@ class _AddAddressPageState extends State<AddAddressPage> {
     final provider = context.watch<AddressProvider>();
     final provinceProvider = context.watch<ProvinceProvider>();
     final cityProvider = context.watch<CityProvider>();
+    final districtProvider = context.watch<DistrictProvider>();
+    final subDistrictProvider = context.watch<SubDistrictProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -126,12 +132,9 @@ class _AddAddressPageState extends State<AddAddressPage> {
               _field(_addressLineController, 'Alamat Lengkap'),
               _provinceField(provinceProvider, theme),
               _cityField(cityProvider, theme),
-              _field(_districtIdController, 'District ID',
-                  keyboardType: TextInputType.number),
+              _districtField(districtProvider, theme),
+              _subDistrictField(subDistrictProvider, theme),
               _field(_postalCodeController, 'Kode Pos'),
-              _field(_districtNameController, 'Nama Kecamatan'),
-              _field(_subDistrictIdController, 'Sub District ID'),
-              _field(_subDistrictNameController, 'Nama Kelurahan'),
               _field(_latitudeController, 'Latitude'),
               _field(_longitudeController, 'Longitude'),
               SwitchListTile(
@@ -220,11 +223,22 @@ class _AddAddressPageState extends State<AddAddressPage> {
             _selectedCityId = null;
             _cityIdController.clear();
             _cityNameController.clear();
+            _selectedDistrictId = null;
+            _districtIdController.clear();
+            _districtNameController.clear();
+            _selectedSubDistrictId = null;
+            _subDistrictIdController.clear();
+            _subDistrictNameController.clear();
+            _postalCodeController.clear();
           });
           if (value != null) {
             context.read<CityProvider>().fetchCities(provinceId: value);
+            context.read<DistrictProvider>().clear();
+            context.read<SubDistrictProvider>().clear();
           } else {
             context.read<CityProvider>().clear();
+            context.read<DistrictProvider>().clear();
+            context.read<SubDistrictProvider>().clear();
           }
         },
         validator: (value) => value == null ? 'Pilih provinsi' : null,
@@ -236,9 +250,13 @@ class _AddAddressPageState extends State<AddAddressPage> {
     if (_selectedProvinceId == null) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 14),
-        child: Text(
-          'Pilih provinsi terlebih dahulu',
-          style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(160)),
+        child: TextFormField(
+          enabled: false,
+          decoration: const InputDecoration(
+            labelText: 'Kota/Kabupaten',
+            hintText: 'Pilih provinsi terlebih dahulu',
+            suffixIcon: Icon(Icons.arrow_drop_down),
+          ),
         ),
       );
     }
@@ -298,9 +316,192 @@ class _AddAddressPageState extends State<AddAddressPage> {
             );
             _cityIdController.text = selected.id.toString();
             _cityNameController.text = selected.name;
+            _selectedDistrictId = null;
+            _districtIdController.clear();
+            _districtNameController.clear();
+            _selectedSubDistrictId = null;
+            _subDistrictIdController.clear();
+            _subDistrictNameController.clear();
+            _postalCodeController.clear();
           });
+          if (value != null) {
+            context.read<DistrictProvider>().fetchDistricts(cityId: value);
+            context.read<SubDistrictProvider>().clear();
+          } else {
+            context.read<DistrictProvider>().clear();
+            context.read<SubDistrictProvider>().clear();
+          }
         },
         validator: (value) => value == null ? 'Pilih kota/kabupaten' : null,
+      ),
+    );
+  }
+
+  Widget _districtField(DistrictProvider districtProvider, ThemeData theme) {
+    if (_selectedCityId == null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: TextFormField(
+          enabled: false,
+          decoration: const InputDecoration(
+            labelText: 'Kecamatan',
+            hintText: 'Pilih kota/kabupaten terlebih dahulu',
+            suffixIcon: Icon(Icons.arrow_drop_down),
+          ),
+        ),
+      );
+    }
+    if (districtProvider.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.only(bottom: 14),
+        child: LinearProgressIndicator(),
+      );
+    }
+    if (districtProvider.error != null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                districtProvider.error ?? 'Gagal memuat data kecamatan',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ),
+            TextButton(
+              onPressed: () => districtProvider.fetchDistricts(
+                cityId: _selectedCityId!,
+              ),
+              child: const Text('Ulangi'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (districtProvider.districts.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(bottom: 14),
+        child: Text('Belum ada data kecamatan'),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: DropdownButtonFormField<int>(
+        initialValue: _selectedDistrictId,
+        items: districtProvider.districts
+            .map(
+              (district) => DropdownMenuItem<int>(
+                value: district.id,
+                child: Text(district.name),
+              ),
+            )
+            .toList(),
+        decoration: const InputDecoration(labelText: 'Kecamatan'),
+        onChanged: (value) {
+          setState(() {
+            _selectedDistrictId = value;
+            final selected = districtProvider.districts.firstWhere(
+              (item) => item.id == value,
+            );
+            _districtIdController.text = selected.id.toString();
+            _districtNameController.text = selected.name;
+            _selectedSubDistrictId = null;
+            _subDistrictIdController.clear();
+            _subDistrictNameController.clear();
+            _postalCodeController.clear();
+          });
+          if (value != null) {
+            context.read<SubDistrictProvider>().fetchSubDistricts(
+              districtId: value,
+            );
+          } else {
+            context.read<SubDistrictProvider>().clear();
+          }
+        },
+        validator: (value) => value == null ? 'Pilih kecamatan' : null,
+      ),
+    );
+  }
+
+  Widget _subDistrictField(
+    SubDistrictProvider subDistrictProvider,
+    ThemeData theme,
+  ) {
+    if (_selectedDistrictId == null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: TextFormField(
+          enabled: false,
+          decoration: const InputDecoration(
+            labelText: 'Kelurahan',
+            hintText: 'Pilih kecamatan terlebih dahulu',
+            suffixIcon: Icon(Icons.arrow_drop_down),
+          ),
+        ),
+      );
+    }
+    if (subDistrictProvider.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.only(bottom: 14),
+        child: LinearProgressIndicator(),
+      );
+    }
+    if (subDistrictProvider.error != null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                subDistrictProvider.error ?? 'Gagal memuat data kelurahan',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ),
+            TextButton(
+              onPressed: () => subDistrictProvider.fetchSubDistricts(
+                districtId: _selectedDistrictId!,
+              ),
+              child: const Text('Ulangi'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (subDistrictProvider.subDistricts.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(bottom: 14),
+        child: Text('Belum ada data kelurahan'),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: DropdownButtonFormField<int>(
+        initialValue: _selectedSubDistrictId,
+        items: subDistrictProvider.subDistricts
+            .map(
+              (subDistrict) => DropdownMenuItem<int>(
+                value: subDistrict.id,
+                child: Text(subDistrict.name),
+              ),
+            )
+            .toList(),
+        decoration: const InputDecoration(labelText: 'Kelurahan'),
+        onChanged: (value) {
+          setState(() {
+            _selectedSubDistrictId = value;
+            final selected = subDistrictProvider.subDistricts.firstWhere(
+              (item) => item.id == value,
+            );
+            _subDistrictIdController.text = selected.id.toString();
+            _subDistrictNameController.text = selected.name;
+            _postalCodeController.text = selected.postalCode;
+          });
+        },
+        validator: (value) => value == null ? 'Pilih kelurahan' : null,
       ),
     );
   }

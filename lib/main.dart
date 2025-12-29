@@ -8,7 +8,9 @@ import 'features/home/providers/product_provider.dart';
 import 'features/cart/cart_provider.dart';
 import 'features/profile/providers/address_provider.dart';
 import 'features/profile/providers/city_provider.dart';
+import 'features/profile/providers/district_provider.dart';
 import 'features/profile/providers/province_provider.dart';
+import 'features/profile/providers/sub_district_provider.dart';
 import 'main_page.dart';
 import 'core/theme_provider.dart';
 
@@ -38,6 +40,20 @@ Future<void> main() async {
           update: (_, auth, cityProvider) {
             cityProvider?.setToken(auth.token);
             return cityProvider ?? CityProvider();
+          },
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, DistrictProvider>(
+          create: (_) => DistrictProvider(),
+          update: (_, auth, districtProvider) {
+            districtProvider?.setToken(auth.token);
+            return districtProvider ?? DistrictProvider();
+          },
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, SubDistrictProvider>(
+          create: (_) => SubDistrictProvider(),
+          update: (_, auth, subDistrictProvider) {
+            subDistrictProvider?.setToken(auth.token);
+            return subDistrictProvider ?? SubDistrictProvider();
           },
         ),
         ChangeNotifierProxyProvider<AuthProvider, AddressProvider>(

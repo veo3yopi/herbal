@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../data/models/address_model.dart';
 import 'providers/address_provider.dart';
+import 'providers/city_provider.dart';
+import 'providers/province_provider.dart';
 
 class AddAddressPage extends StatefulWidget {
   const AddAddressPage({super.key});
@@ -31,6 +33,16 @@ class _AddAddressPageState extends State<AddAddressPage> {
   final _longitudeController = TextEditingController();
 
   bool _isDefault = false;
+  int? _selectedProvinceId;
+  int? _selectedCityId;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProvinceProvider>().fetchProvinces();
+    });
+  }
 
   @override
   void dispose() {
@@ -92,6 +104,8 @@ class _AddAddressPageState extends State<AddAddressPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final provider = context.watch<AddressProvider>();
+    final provinceProvider = context.watch<ProvinceProvider>();
+    final cityProvider = context.watch<CityProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -110,15 +124,11 @@ class _AddAddressPageState extends State<AddAddressPage> {
               _field(_phoneController, 'Nomor Telepon',
                   keyboardType: TextInputType.phone),
               _field(_addressLineController, 'Alamat Lengkap'),
-              _field(_provinceIdController, 'Province ID',
-                  keyboardType: TextInputType.number),
-              _field(_cityIdController, 'City ID',
-                  keyboardType: TextInputType.number),
+              _provinceField(provinceProvider, theme),
+              _cityField(cityProvider, theme),
               _field(_districtIdController, 'District ID',
                   keyboardType: TextInputType.number),
               _field(_postalCodeController, 'Kode Pos'),
-              _field(_provinceNameController, 'Nama Provinsi'),
-              _field(_cityNameController, 'Nama Kota'),
               _field(_districtNameController, 'Nama Kecamatan'),
               _field(_subDistrictIdController, 'Sub District ID'),
               _field(_subDistrictNameController, 'Nama Kelurahan'),
@@ -155,6 +165,142 @@ class _AddAddressPageState extends State<AddAddressPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _provinceField(ProvinceProvider provinceProvider, ThemeData theme) {
+    if (provinceProvider.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.only(bottom: 14),
+        child: LinearProgressIndicator(),
+      );
+    }
+    if (provinceProvider.error != null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                provinceProvider.error ?? 'Gagal memuat data provinsi',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ),
+            TextButton(
+              onPressed: () => provinceProvider.fetchProvinces(),
+              child: const Text('Ulangi'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: DropdownButtonFormField<int>(
+        initialValue: _selectedProvinceId,
+        items: provinceProvider.provinces
+            .map(
+              (province) => DropdownMenuItem<int>(
+                value: province.id,
+                child: Text(province.name),
+              ),
+            )
+            .toList(),
+        decoration: const InputDecoration(labelText: 'Provinsi'),
+        onChanged: (value) {
+          setState(() {
+            _selectedProvinceId = value;
+            final selected = provinceProvider.provinces.firstWhere(
+              (item) => item.id == value,
+            );
+            _provinceIdController.text = selected.id.toString();
+            _provinceNameController.text = selected.name;
+            _selectedCityId = null;
+            _cityIdController.clear();
+            _cityNameController.clear();
+          });
+          if (value != null) {
+            context.read<CityProvider>().fetchCities(provinceId: value);
+          } else {
+            context.read<CityProvider>().clear();
+          }
+        },
+        validator: (value) => value == null ? 'Pilih provinsi' : null,
+      ),
+    );
+  }
+
+  Widget _cityField(CityProvider cityProvider, ThemeData theme) {
+    if (_selectedProvinceId == null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: Text(
+          'Pilih provinsi terlebih dahulu',
+          style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(160)),
+        ),
+      );
+    }
+    if (cityProvider.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.only(bottom: 14),
+        child: LinearProgressIndicator(),
+      );
+    }
+    if (cityProvider.error != null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                cityProvider.error ?? 'Gagal memuat data kota',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ),
+            TextButton(
+              onPressed: () => cityProvider.fetchCities(
+                provinceId: _selectedProvinceId!,
+              ),
+              child: const Text('Ulangi'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (cityProvider.cities.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(bottom: 14),
+        child: Text('Belum ada data kota'),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: DropdownButtonFormField<int>(
+        initialValue: _selectedCityId,
+        items: cityProvider.cities
+            .map(
+              (city) => DropdownMenuItem<int>(
+                value: city.id,
+                child: Text(city.name),
+              ),
+            )
+            .toList(),
+        decoration: const InputDecoration(labelText: 'Kota/Kabupaten'),
+        onChanged: (value) {
+          setState(() {
+            _selectedCityId = value;
+            final selected = cityProvider.cities.firstWhere(
+              (item) => item.id == value,
+            );
+            _cityIdController.text = selected.id.toString();
+            _cityNameController.text = selected.name;
+          });
+        },
+        validator: (value) => value == null ? 'Pilih kota/kabupaten' : null,
       ),
     );
   }

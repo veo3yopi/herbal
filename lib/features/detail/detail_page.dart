@@ -252,7 +252,7 @@ class _DetailPageState extends State<DetailPage> {
         Text(
           label,
           style: TextStyle(
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             fontSize: 12,
           ),
         ),

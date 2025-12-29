@@ -86,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
                   Text(
                     'Kami akan mengirim OTP untuk verifikasi.',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 40),

@@ -85,8 +85,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 decoration: const InputDecoration(labelText: "Email"),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return 'Email wajib diisi';
+                  }
                   if (!value.contains('@')) return 'Format email tidak valid';
                   return null;
                 },

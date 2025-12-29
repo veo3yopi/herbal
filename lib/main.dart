@@ -7,6 +7,8 @@ import 'features/home/providers/category_provider.dart';
 import 'features/home/providers/product_provider.dart';
 import 'features/cart/cart_provider.dart';
 import 'features/profile/providers/address_provider.dart';
+import 'features/profile/providers/city_provider.dart';
+import 'features/profile/providers/province_provider.dart';
 import 'main_page.dart';
 import 'core/theme_provider.dart';
 
@@ -24,6 +26,20 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, ProvinceProvider>(
+          create: (_) => ProvinceProvider(),
+          update: (_, auth, provinceProvider) {
+            provinceProvider?.setToken(auth.token);
+            return provinceProvider ?? ProvinceProvider();
+          },
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, CityProvider>(
+          create: (_) => CityProvider(),
+          update: (_, auth, cityProvider) {
+            cityProvider?.setToken(auth.token);
+            return cityProvider ?? CityProvider();
+          },
+        ),
         ChangeNotifierProxyProvider<AuthProvider, AddressProvider>(
           create: (_) => AddressProvider(),
           update: (_, auth, addressProvider) {

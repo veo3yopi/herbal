@@ -1,5 +1,6 @@
 import 'package:coffe/data/models/product_model.dart';
 import 'package:coffe/features/cart/cart_provider.dart';
+import 'package:coffe/features/checkout/checkout_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -245,39 +246,11 @@ class _CartPageState extends State<CartPage> {
                         height: 55,
                         child: ElevatedButton(
                           onPressed: () {
-                            // tampilkan dialog konfirmasi
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: const Text("Konfirmasi"),
-                                  content: const Text(
-                                    "Apakah kamu yakin ingin membayar pesanan ini?",
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text(
-                                        "Batal",
-                                        style: TextStyle(color: Colors.grey),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                        _processPayment(cartProvider);
-                                      },
-                                      child: Text(
-                                        "Bayar",
-                                        style: TextStyle(
-                                          color: primary,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CheckoutPage(),
+                              ),
                             );
                           },
                           style: ElevatedButton.styleFrom(
@@ -304,88 +277,5 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  void _processPayment(CartProvider cartProvider) async {
-    // 1. tampilkan loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(
-        child: CircularProgressIndicator(
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-    );
-
-    // 2. Jaeda waktu 2 detik
-    await Future.delayed(const Duration(seconds: 2));
-
-    // 3. Tutup loading
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
-
-    // 4. tampilan Dialog Sukses
-    if (mounted) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) {
-          final theme = Theme.of(context);
-          final primary = theme.colorScheme.primary;
-          final onSurface = theme.colorScheme.onSurface;
-          final muted = onSurface.withAlpha(65);
-          return AlertDialog(
-            backgroundColor: theme.cardColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.check_circle, color: Colors.green, size: 80),
-                const SizedBox(height: 20),
-                Text(
-                  "Pembayaran Berhasil!",
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: onSurface,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  "Kopimu sedang disiapka. Mohon tunggu sebentar ya",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: muted),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // 5. Berishan keranjang
-                      cartProvider.clearCart();
-
-                      // 6. kembali ke menu utama
-                      Navigator.pop(context);
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                    child: const Text(
-                      "Kembali Belanja",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    }
-  }
+  
 }

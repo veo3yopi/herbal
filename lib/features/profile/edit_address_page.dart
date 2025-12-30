@@ -146,7 +146,11 @@ class _EditAddressPageState extends State<EditAddressPage> {
     );
     if (!mounted) return;
     if (error == null) {
-      Navigator.pop(context);
+      _showMessage('Alamat berhasil diperbarui.');
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (mounted) {
+        Navigator.pop(context);
+      }
     } else {
       _showMessage(error);
     }

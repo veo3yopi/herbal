@@ -53,6 +53,32 @@ class AddressProvider extends ChangeNotifier {
     }
   }
 
+  Future<String?> updateAddress({
+    required int addressId,
+    required AddressModel address,
+  }) async {
+    if (_token == null || _token!.isEmpty) return 'Token tidak tersedia';
+    _setLoading(true);
+    _error = null;
+    try {
+      final updated = await _service.updateAddress(
+        token: _token!,
+        addressId: addressId,
+        address: address,
+      );
+      final index = _addresses.indexWhere((item) => item.id == addressId);
+      if (index != -1) {
+        _addresses[index] = updated;
+      }
+      return null;
+    } catch (e) {
+      return e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      _setLoading(false);
+      notifyListeners();
+    }
+  }
+
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();

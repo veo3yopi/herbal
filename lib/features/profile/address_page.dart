@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../data/models/address_model.dart';
 import 'providers/address_provider.dart';
 import 'add_address_page.dart';
+import 'edit_address_page.dart';
 
 class AddressPage extends StatefulWidget {
   const AddressPage({super.key});
@@ -108,11 +109,15 @@ class _AddressCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                address.label,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              Expanded(
+                child: Text(
+                  address.label,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ),
               if (address.isDefault)
                 Container(
@@ -130,6 +135,19 @@ class _AddressCard extends StatelessWidget {
                     ),
                   ),
                 ),
+              const SizedBox(width: 6),
+              IconButton(
+                tooltip: 'Edit alamat',
+                icon: const Icon(Icons.edit, size: 20),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EditAddressPage(address: address),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
           const SizedBox(height: 6),

@@ -37,12 +37,42 @@ class AddressService {
       final response = await _dio.post(
         '/api/v1/addresses',
         data: address.toJson(),
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
       );
       final data = response.data['data'] as Map<String, dynamic>;
       return AddressModel.fromJson(data);
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Gagal menambah alamat');
+    }
+  }
+
+  Future<AddressModel> updateAddress({
+    required String token,
+    required int addressId,
+    required AddressModel address,
+  }) async {
+    try {
+      final response = await _dio.patch(
+        '/api/v1/addresses/$addressId',
+        data: address.toJson(),
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+      final data = response.data['data'] as Map<String, dynamic>;
+      return AddressModel.fromJson(data);
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Gagal memperbarui alamat');
     }
   }
 }

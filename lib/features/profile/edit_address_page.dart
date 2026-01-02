@@ -275,8 +275,10 @@ class _EditAddressPageState extends State<EditAddressPage> {
       Position? position;
       try {
         position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 10),
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            timeLimit: Duration(seconds: 10),
+          ),
         );
       } on TimeoutException {
         position = await Geolocator.getLastKnownPosition();
@@ -344,6 +346,7 @@ class _EditAddressPageState extends State<EditAddressPage> {
           itemLabel: (item) => item.name,
         );
         if (selected == null) return;
+        if (!mounted) return;
         setState(() {
           _selectedProvinceId = selected.id;
           _provinceIdController.text = selected.id.toString();
@@ -424,6 +427,7 @@ class _EditAddressPageState extends State<EditAddressPage> {
           itemLabel: (item) => item.name,
         );
         if (selected == null) return;
+        if (!mounted) return;
         setState(() {
           _selectedCityId = selected.id;
           _cityIdController.text = selected.id.toString();
@@ -500,6 +504,7 @@ class _EditAddressPageState extends State<EditAddressPage> {
           itemLabel: (item) => item.name,
         );
         if (selected == null) return;
+        if (!mounted) return;
         setState(() {
           _selectedDistrictId = selected.id;
           _districtIdController.text = selected.id.toString();
@@ -577,6 +582,7 @@ class _EditAddressPageState extends State<EditAddressPage> {
           itemLabel: (item) => item.name,
         );
         if (selected == null) return;
+        if (!mounted) return;
         setState(() {
           _selectedSubDistrictId = selected.id;
           _subDistrictIdController.text = selected.id.toString();
@@ -668,7 +674,7 @@ class _EditAddressPageState extends State<EditAddressPage> {
                         : ListView.separated(
                             shrinkWrap: true,
                             itemCount: filtered.length,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, index) =>
                                 const Divider(height: 1),
                             itemBuilder: (context, index) {
                               final item = filtered[index];

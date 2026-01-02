@@ -96,9 +96,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ? const Text('Keranjang masih kosong.')
                   : Column(
                       children: cartProvider.items.map((item) {
-                        final product = item['product'] as ProductModel;
+                        final ProductModel product = item['product'];
                         final qty = item['qty'] as int;
-                        final price = (product.price as num).toInt();
+                        final price = product.price.toInt();
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: Row(

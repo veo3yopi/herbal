@@ -3,6 +3,7 @@ import 'package:coffe/data/models/product_model.dart';
 import 'package:coffe/data/models/shipping_rate_model.dart';
 import 'package:coffe/data/models/warehouse_model.dart';
 import 'package:coffe/data/services/shipping_rate_service.dart';
+import 'package:coffe/features/checkout/courier_select_page.dart';
 import 'package:coffe/features/auth/auth_provider.dart';
 import 'package:coffe/features/cart/cart_provider.dart';
 import 'package:coffe/features/profile/providers/address_provider.dart';
@@ -242,14 +243,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             if (_selectedRate != null)
                               Text(formatter.format(_selectedRate!.price)),
                             const SizedBox(width: 8),
-                            const Icon(Icons.keyboard_arrow_down),
+                            const Icon(Icons.arrow_forward_ios, size: 16),
                           ],
                         ),
                         onTap: () async {
-                          final selected = await _showCourierDialog(
+                          final selected = await Navigator.push(
                             context,
-                            rates: _rates,
-                            formatter: formatter,
+                            MaterialPageRoute(
+                              builder: (_) => CourierSelectPage(
+                                rates: _rates,
+                                selectedRate: _selectedRate,
+                              ),
+                            ),
                           );
                           if (!mounted || selected == null) return;
                           setState(() => _selectedRate = selected);
@@ -408,7 +413,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       if (!mounted) return;
       setState(() {
         _rates = response.rates;
-        _selectedRate = response.rates.isNotEmpty ? response.rates.first : null;
+        _selectedRate = _selectCheapestRate(response.rates) ?? _selectedRate;
         _warehouse = response.warehouse;
         _lastRateAddressId = address.id;
       });
@@ -425,6 +430,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
         setState(() => _isLoadingRates = false);
       }
     }
+  }
+
+  ShippingRateModel? _selectCheapestRate(List<ShippingRateModel> rates) {
+    if (rates.isEmpty) return null;
+    return rates.reduce(
+      (current, next) => next.price < current.price ? next : current,
+    );
   }
 
   String _formatDuration(int min, int max, String type) {
@@ -453,59 +465,5 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Future<ShippingRateModel?> _showCourierDialog(
-    BuildContext context, {
-    required List<ShippingRateModel> rates,
-    required NumberFormat formatter,
-  }) {
-    return showDialog<ShippingRateModel>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Pilih Kurir'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: rates.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final rate = rates[index];
-                final duration = _formatDuration(
-                  rate.minDuration,
-                  rate.maxDuration,
-                  rate.durationType,
-                );
-                final isSelected =
-                    _selectedRate?.signedKey == rate.signedKey;
-                return ListTile(
-                  title: Text('${rate.logisticName} - ${rate.rateName}'),
-                  subtitle: Text(duration),
-                  trailing: Text(formatter.format(rate.price)),
-                  leading: Icon(
-                    isSelected
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_off,
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.4),
-                  ),
-                  onTap: () => Navigator.pop(context, rate),
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Tutup'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  
 }

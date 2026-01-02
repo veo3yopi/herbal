@@ -1,5 +1,8 @@
 import 'package:coffe/data/models/address_model.dart';
 import 'package:coffe/data/models/product_model.dart';
+import 'package:coffe/data/models/shipping_rate_model.dart';
+import 'package:coffe/data/models/warehouse_model.dart';
+import 'package:coffe/data/services/shipping_rate_service.dart';
 import 'package:coffe/features/auth/auth_provider.dart';
 import 'package:coffe/features/cart/cart_provider.dart';
 import 'package:coffe/features/profile/providers/address_provider.dart';
@@ -15,6 +18,14 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
+  final ShippingRateService _rateService = ShippingRateService();
+  List<ShippingRateModel> _rates = [];
+  ShippingRateModel? _selectedRate;
+  WarehouseModel? _warehouse;
+  bool _isLoadingRates = false;
+  String? _rateError;
+  int? _lastRateAddressId;
+
   @override
   void initState() {
     super.initState();
@@ -36,9 +47,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
 
     final user = context.watch<AuthProvider>().user;
+    final token = context.watch<AuthProvider>().token;
     final addressProvider = context.watch<AddressProvider>();
     final cartProvider = context.watch<CartProvider>();
     final address = _selectPrimaryAddress(addressProvider.addresses);
+
+    _maybeLoadRates(
+      token: token,
+      address: address,
+      cartProvider: cartProvider,
+    );
+
+    final shippingCost = _selectedRate?.price ?? 0;
+    final totalWithShipping = cartProvider.totalPrice + shippingCost;
 
     return Scaffold(
       appBar: AppBar(
@@ -89,6 +110,45 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
             ),
             const SizedBox(height: 16),
+            _sectionTitle('Gudang Pengirim'),
+            _infoCard(
+              theme: theme,
+              child: Builder(
+                builder: (_) {
+                  if (cartProvider.items.isEmpty) {
+                    return const Text('Keranjang masih kosong.');
+                  }
+                  if (address == null) {
+                    return const Text('Tambahkan alamat utama terlebih dahulu.');
+                  }
+                  if (_isLoadingRates) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (_rateError != null) {
+                    return Text(_rateError ?? 'Gagal memuat gudang');
+                  }
+                  if (_warehouse == null) {
+                    return const Text('Gudang belum tersedia.');
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _warehouse!.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(_warehouse!.address),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Jarak: ${_warehouse!.distanceKm.toStringAsFixed(2)} km',
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
             _sectionTitle('Produk'),
             _infoCard(
               theme: theme,
@@ -122,19 +182,123 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     ),
             ),
             const SizedBox(height: 16),
+            _sectionTitle('Pilih Kurir'),
+            _infoCard(
+              theme: theme,
+              child: Builder(
+                builder: (_) {
+                  if (cartProvider.items.isEmpty) {
+                    return const Text('Keranjang masih kosong.');
+                  }
+                  if (address == null) {
+                    return const Text('Tambahkan alamat utama terlebih dahulu.');
+                  }
+                  if (_isLoadingRates) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (_rateError != null) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_rateError ?? 'Gagal memuat ongkir'),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () => _loadRates(
+                            token: token,
+                            address: address,
+                            cartProvider: cartProvider,
+                            force: true,
+                          ),
+                          child: const Text('Ulangi'),
+                        ),
+                      ],
+                    );
+                  }
+                  if (_rates.isEmpty) {
+                    return const Text('Belum ada pilihan kurir.');
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          _selectedRate == null
+                              ? 'Pilih kurir'
+                              : '${_selectedRate!.logisticName} - ${_selectedRate!.rateName}',
+                        ),
+                        subtitle: _selectedRate == null
+                            ? null
+                            : Text(
+                                _formatDuration(
+                                  _selectedRate!.minDuration,
+                                  _selectedRate!.maxDuration,
+                                  _selectedRate!.durationType,
+                                ),
+                              ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_selectedRate != null)
+                              Text(formatter.format(_selectedRate!.price)),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.keyboard_arrow_down),
+                          ],
+                        ),
+                        onTap: () async {
+                          final selected = await _showCourierDialog(
+                            context,
+                            rates: _rates,
+                            formatter: formatter,
+                          );
+                          if (!mounted || selected == null) return;
+                          setState(() => _selectedRate = selected);
+                        },
+                      ),
+                      if (_selectedRate == null)
+                        const Text('Belum ada kurir dipilih.'),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
             _sectionTitle('Ringkasan'),
             _infoCard(
               theme: theme,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
                 children: [
-                  const Text('Total'),
-                  Text(
-                    formatter.format(cartProvider.totalPrice),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Subtotal'),
+                      Text(formatter.format(cartProvider.totalPrice)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Ongkir'),
+                      Text(formatter.format(shippingCost)),
+                    ],
+                  ),
+                  const Divider(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Total',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        formatter.format(totalWithShipping),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -204,6 +368,72 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
+  void _maybeLoadRates({
+    required String? token,
+    required AddressModel? address,
+    required CartProvider cartProvider,
+  }) {
+    if (token == null || token.isEmpty) return;
+    if (address == null) return;
+    if (cartProvider.items.isEmpty) return;
+    if (_isLoadingRates) return;
+    if (_lastRateAddressId == address.id && _rates.isNotEmpty) return;
+    _loadRates(token: token, address: address, cartProvider: cartProvider);
+  }
+
+  Future<void> _loadRates({
+    required String? token,
+    required AddressModel address,
+    required CartProvider cartProvider,
+    bool force = false,
+  }) async {
+    if (token == null || token.isEmpty) return;
+    if (_isLoadingRates) return;
+    if (!force && _lastRateAddressId == address.id && _rates.isNotEmpty) return;
+    setState(() {
+      _isLoadingRates = true;
+      _rateError = null;
+    });
+    try {
+      final items = cartProvider.items.map((item) {
+        final product = item['product'] as ProductModel;
+        final qty = item['qty'] as int;
+        return {'product_id': product.id, 'quantity': qty};
+      }).toList();
+      final response = await _rateService.fetchRates(
+        token: token,
+        addressId: address.id,
+        items: items,
+      );
+      if (!mounted) return;
+      setState(() {
+        _rates = response.rates;
+        _selectedRate = response.rates.isNotEmpty ? response.rates.first : null;
+        _warehouse = response.warehouse;
+        _lastRateAddressId = address.id;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _rateError = e.toString().replaceFirst('Exception: ', '');
+        _rates = [];
+        _selectedRate = null;
+        _warehouse = null;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingRates = false);
+      }
+    }
+  }
+
+  String _formatDuration(int min, int max, String type) {
+    final unit = type.toLowerCase() == 'hour' ? 'jam' : 'hari';
+    if (min == 0 && max == 0) return 'Estimasi tidak tersedia';
+    if (min == max) return 'Estimasi $min $unit';
+    return 'Estimasi $min-$max $unit';
+  }
+
   Widget _addressView(AddressModel address) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,6 +450,62 @@ class _CheckoutPageState extends State<CheckoutPage> {
         Text('${address.districtName}, ${address.cityName}'),
         Text('${address.provinceName} ${address.postalCode}'),
       ],
+    );
+  }
+
+  Future<ShippingRateModel?> _showCourierDialog(
+    BuildContext context, {
+    required List<ShippingRateModel> rates,
+    required NumberFormat formatter,
+  }) {
+    return showDialog<ShippingRateModel>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Pilih Kurir'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: rates.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final rate = rates[index];
+                final duration = _formatDuration(
+                  rate.minDuration,
+                  rate.maxDuration,
+                  rate.durationType,
+                );
+                final isSelected =
+                    _selectedRate?.signedKey == rate.signedKey;
+                return ListTile(
+                  title: Text('${rate.logisticName} - ${rate.rateName}'),
+                  subtitle: Text(duration),
+                  trailing: Text(formatter.format(rate.price)),
+                  leading: Icon(
+                    isSelected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_off,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.4),
+                  ),
+                  onTap: () => Navigator.pop(context, rate),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Tutup'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

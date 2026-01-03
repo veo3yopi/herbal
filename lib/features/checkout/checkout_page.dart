@@ -313,7 +313,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: cartProvider.items.isEmpty ? null : () {},
+                onPressed: cartProvider.items.isEmpty
+                    ? null
+                    : () {
+                        cartProvider.clearCart();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Checkout berhasil. Keranjang dikosongkan.',
+                            ),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary,
                   shape: RoundedRectangleBorder(

@@ -13,14 +13,15 @@ class ShippingRateResponse {
 
 class ShippingRateService {
   ShippingRateService({Dio? dio})
-      : _dio = dio ??
-            Dio(
-              BaseOptions(
-                baseUrl: AppConfig.baseUrl,
-                connectTimeout: const Duration(seconds: 10),
-                receiveTimeout: const Duration(seconds: 10),
-              ),
-            );
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              baseUrl: AppConfig.baseUrl,
+              connectTimeout: const Duration(seconds: 10),
+              receiveTimeout: const Duration(seconds: 10),
+            ),
+          );
 
   final Dio _dio;
 
@@ -46,16 +47,20 @@ class ShippingRateService {
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'Authorization': token.startsWith('Bearer ') ? token : 'Bearer $token',
+            'Authorization': token.startsWith('Bearer ')
+                ? token
+                : 'Bearer $token',
           },
         ),
       );
       final rateList = response.data['rates'] as List<dynamic>;
       final warehouseJson = response.data['warehouse'] as Map<String, dynamic>?;
-      final warehouse =
-          warehouseJson == null ? null : WarehouseModel.fromJson(warehouseJson);
-      final rates =
-          rateList.map((json) => ShippingRateModel.fromJson(json)).toList();
+      final warehouse = warehouseJson == null
+          ? null
+          : WarehouseModel.fromJson(warehouseJson);
+      final rates = rateList
+          .map((json) => ShippingRateModel.fromJson(json))
+          .toList();
       return ShippingRateResponse(warehouse: warehouse, rates: rates);
     } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Gagal memuat ongkir');

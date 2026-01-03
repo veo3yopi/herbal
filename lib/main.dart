@@ -27,7 +27,7 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
-        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()..loadCart()),
         ChangeNotifierProxyProvider<AuthProvider, ProvinceProvider>(
           create: (_) => ProvinceProvider(),
           update: (_, auth, provinceProvider) {

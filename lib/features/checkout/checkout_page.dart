@@ -4,6 +4,7 @@ import 'package:coffe/data/models/shipping_rate_model.dart';
 import 'package:coffe/data/models/warehouse_model.dart';
 import 'package:coffe/data/services/shipping_rate_service.dart';
 import 'package:coffe/features/checkout/courier_select_page.dart';
+import 'package:cool_alert/cool_alert.dart';
 import 'package:coffe/features/auth/auth_provider.dart';
 import 'package:coffe/features/cart/cart_provider.dart';
 import 'package:coffe/features/profile/providers/address_provider.dart';
@@ -24,6 +25,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   ShippingRateModel? _selectedRate;
   WarehouseModel? _warehouse;
   bool _isLoadingRates = false;
+  bool _isLoadingDialogShown = false;
   String? _rateError;
   int? _lastRateAddressId;
 
@@ -394,7 +396,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     if (address == null) return;
     if (cartProvider.items.isEmpty) return;
     if (_isLoadingRates) return;
-    if (_lastRateAddressId == address.id && _rates.isNotEmpty) return;
+    if (_lastRateAddressId == address.id) return;
     _loadRates(token: token, address: address, cartProvider: cartProvider);
   }
 
@@ -406,11 +408,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }) async {
     if (token == null || token.isEmpty) return;
     if (_isLoadingRates) return;
-    if (!force && _lastRateAddressId == address.id && _rates.isNotEmpty) return;
+    if (!force && _lastRateAddressId == address.id) return;
     setState(() {
       _isLoadingRates = true;
       _rateError = null;
+      _lastRateAddressId = address.id;
     });
+    _showLoadingDialog();
     try {
       final items = cartProvider.items.map((item) {
         final product = item['product'] as ProductModel;
@@ -438,6 +442,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         _warehouse = null;
       });
     } finally {
+      _hideLoadingDialog();
       if (mounted) {
         setState(() => _isLoadingRates = false);
       }
@@ -456,6 +461,32 @@ class _CheckoutPageState extends State<CheckoutPage> {
     if (min == 0 && max == 0) return 'Estimasi tidak tersedia';
     if (min == max) return 'Estimasi $min $unit';
     return 'Estimasi $min-$max $unit';
+  }
+
+  void _showLoadingDialog() {
+    if (!mounted || _isLoadingDialogShown) return;
+    _isLoadingDialogShown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_isLoadingDialogShown) return;
+      CoolAlert.show(
+        context: context,
+        type: CoolAlertType.loading,
+        barrierDismissible: false,
+        text: 'Mencari gudang terdekat untuk alamat pengiriman...',
+      );
+    });
+  }
+
+  void _hideLoadingDialog() {
+    if (!mounted || !_isLoadingDialogShown) return;
+    _isLoadingDialogShown = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final navigator = Navigator.of(context, rootNavigator: true);
+      if (navigator.canPop()) {
+        navigator.pop();
+      }
+    });
   }
 
   Widget _addressView(AddressModel address) {

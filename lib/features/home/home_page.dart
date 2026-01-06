@@ -384,17 +384,17 @@ class _HomePageState extends State<HomePage> {
                                 const SizedBox(width: 12),
                             itemBuilder: (context, index) {
                               final item = popularItems[index];
-                          return _miniProductCard(
-                            item: item,
-                            background: surface,
-                            textPrimary: textPrimary,
-                            textMuted: textMuted,
-                            formatter: formatter,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => DetailPage(product: item),
+                              return _miniProductCard(
+                                item: item,
+                                background: surface,
+                                textPrimary: textPrimary,
+                                textMuted: textMuted,
+                                formatter: formatter,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => DetailPage(product: item),
                                     ),
                                   );
                                 },
@@ -593,52 +593,55 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    item.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: textPrimary,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      item.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item.categories.isNotEmpty
-                        ? item.categories.first.name
-                        : '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: textMuted, fontSize: 12),
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        formatter.format(item.price.toInt()),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F3326),
-                          fontSize: 13,
+                    const SizedBox(height: 4),
+                    Text(
+                      item.categories.isNotEmpty
+                          ? item.categories.first.name
+                          : '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: textMuted, fontSize: 12),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          formatter.format(item.price.toInt()),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1F3326),
+                            fontSize: 13,
+                          ),
                         ),
-                      ),
-                      const Spacer(),
-                      const Icon(
-                        Icons.star,
-                        size: 14,
-                        color: Color(0xFFF1B332),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '4.6',
-                        style: TextStyle(color: textMuted, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ],
+                        const Spacer(),
+                        const Icon(
+                          Icons.star,
+                          size: 14,
+                          color: Color(0xFFF1B332),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '4.6',
+                          style: TextStyle(color: textMuted, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

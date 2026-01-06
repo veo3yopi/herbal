@@ -1,3 +1,4 @@
+import 'package:coffe/data/models/category_model.dart';
 import 'package:coffe/data/models/product_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -178,26 +179,34 @@ class _DetailPageState extends State<DetailPage> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _infoChip(
-                          context,
-                          label: 'Berat',
-                          value: '${product.weight} gr',
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _infoChip(
+                              context,
+                              label: 'Berat',
+                              value: '${product.weight} gr',
+                            ),
+                            _infoChip(
+                              context,
+                              label: 'Stok',
+                              value: product.stock.toString(),
+                            ),
+                          ],
                         ),
-                        _infoChip(
-                          context,
-                          label: 'Stok',
-                          value: product.stock.toString(),
+                        const SizedBox(height: 14),
+                        Text(
+                          'Kategori',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: onSurface,
+                          ),
                         ),
-                        _infoChip(
-                          context,
-                          label: 'Kategori',
-                          value: product.categories.isNotEmpty
-                              ? product.categories.first.name
-                              : '-',
-                        ),
+                        const SizedBox(height: 8),
+                        _categoryTags(context, product.categories),
                       ],
                     ),
                     const SizedBox(height: 30),
@@ -272,6 +281,37 @@ class _DetailPageState extends State<DetailPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _categoryTags(BuildContext context, List<CategoryModel> categories) {
+    if (categories.isEmpty) {
+      return Text(
+        '-',
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: categories.map<Widget>((category) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Text(
+            category.name,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 

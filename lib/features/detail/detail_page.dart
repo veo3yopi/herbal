@@ -321,7 +321,7 @@ class _DetailPageState extends State<DetailPage> {
       images.add(product.primaryImage!);
     }
     for (final item in product.image) {
-      if (item is String && item.isNotEmpty && !images.contains(item)) {
+      if (item.isNotEmpty && !images.contains(item)) {
         images.add(item);
       }
     }

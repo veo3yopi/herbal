@@ -380,7 +380,7 @@ class _HomePageState extends State<HomePage> {
                           return ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: popularItems.length,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 const SizedBox(width: 12),
                             itemBuilder: (context, index) {
                               final item = popularItems[index];
@@ -581,7 +581,7 @@ class _HomePageState extends State<HomePage> {
                   item.primaryImage ??
                       (item.image.isNotEmpty ? item.image.first : ''),
                   fit: BoxFit.cover,
-                  errorBuilder: (context, _, __) => Container(
+                  errorBuilder: (context, _, _) => Container(
                     color: const Color(0xFFF1F7F3),
                     child: const Icon(
                       Icons.image_not_supported_outlined,

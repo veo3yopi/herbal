@@ -15,6 +15,21 @@ class DetailPage extends StatefulWidget {
 }
 
 class _DetailPageState extends State<DetailPage> {
+  late final PageController _pageController;
+  int _currentImageIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -30,9 +45,7 @@ class _DetailPageState extends State<DetailPage> {
       decimalDigits: 0,
     );
 
-    final imageUrl =
-        product.primaryImage ??
-        (product.image.isNotEmpty ? product.image.first : '');
+    final images = _buildImageList(product);
     // final plainDescription = product.description
     //     .replaceAll(RegExp(r'<[^>]*>'), '')
     //     .trim();
@@ -48,16 +61,10 @@ class _DetailPageState extends State<DetailPage> {
           children: [
             Stack(
               children: [
-                Hero(
-                  tag: product.name,
-                  child: Image.network(
-                    imageUrl.isNotEmpty
-                        ? imageUrl
-                        : 'https://via.placeholder.com/400',
-                    height: 360,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
+                _buildImageSlider(
+                  context,
+                  images: images,
+                  heroBaseTag: product.name,
                 ),
                 SafeArea(
                   child: Padding(
@@ -252,7 +259,7 @@ class _DetailPageState extends State<DetailPage> {
         Text(
           label,
           style: TextStyle(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             fontSize: 12,
           ),
         ),
@@ -265,6 +272,148 @@ class _DetailPageState extends State<DetailPage> {
           ),
         ),
       ],
+    );
+  }
+
+  List<String> _buildImageList(ProductModel product) {
+    final images = <String>[];
+    if (product.primaryImage != null && product.primaryImage!.isNotEmpty) {
+      images.add(product.primaryImage!);
+    }
+    for (final item in product.image) {
+      if (item is String && item.isNotEmpty && !images.contains(item)) {
+        images.add(item);
+      }
+    }
+    return images;
+  }
+
+  Widget _buildImageSlider(
+    BuildContext context, {
+    required List<String> images,
+    required String heroBaseTag,
+  }) {
+    final fallback = const ['https://via.placeholder.com/400'];
+    final displayImages = images.isEmpty ? fallback : images;
+    final canPreview = images.isNotEmpty;
+
+    return SizedBox(
+      height: 360,
+      width: double.infinity,
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            itemCount: displayImages.length,
+            onPageChanged: (index) {
+              setState(() => _currentImageIndex = index);
+            },
+            itemBuilder: (context, index) {
+              final imageUrl = displayImages[index];
+              final heroTag =
+                  index == 0 ? heroBaseTag : '${heroBaseTag}_$index';
+              return GestureDetector(
+                onTap: () {
+                  if (!canPreview) return;
+                  _showImagePreview(context, imageUrl, heroTag);
+                },
+                child: Hero(
+                  tag: heroTag,
+                  child: Image.network(
+                    imageUrl,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              );
+            },
+          ),
+          if (displayImages.length > 1)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 56,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(displayImages.length, (index) {
+                      final isActive = index == _currentImageIndex;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: isActive ? 18 : 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: isActive ? Colors.white : Colors.white70,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showImagePreview(
+    BuildContext context,
+    String imageUrl,
+    String heroTag,
+  ) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.zero,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(dialogContext).pop(),
+                  child: InteractiveViewer(
+                    minScale: 1,
+                    maxScale: 4,
+                    child: Hero(
+                      tag: heroTag,
+                      child: Image.network(
+                        imageUrl,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 24,
+                right: 16,
+                child: CircleAvatar(
+                  backgroundColor: Colors.black.withValues(alpha: 0.6),
+                  child: IconButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    icon: const Icon(Icons.close, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

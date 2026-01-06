@@ -10,6 +10,9 @@ class ProductModel {
   final String description;
   final num price;
   final num weight;
+  final num length;
+  final num width;
+  final num height;
   final num stock;
   @JsonKey(name: 'is_featured')
   final bool isFeatured;
@@ -21,7 +24,8 @@ class ProductModel {
   final String? primaryImage;
   @JsonKey(name: 'primary_image_thumb')
   final String? primaryImageThumb;
-  final List<dynamic> image;
+  @JsonKey(fromJson: _imageUrlsFromJson, toJson: _imageUrlsToJson)
+  final List<String> image;
   final List<CategoryModel> categories;
 
   ProductModel({
@@ -30,6 +34,9 @@ class ProductModel {
     required this.description,
     required this.price,
     required this.weight,
+    required this.length,
+    required this.width,
+    required this.height,
     required this.stock,
     required this.isFeatured,
     required this.featuredPriority,
@@ -44,4 +51,21 @@ class ProductModel {
       _$ProductModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$ProductModelToJson(this);
+
+  static List<String> _imageUrlsFromJson(List<dynamic>? items) {
+    if (items == null) return [];
+    return items
+        .map((item) {
+          if (item is String) return item;
+          if (item is Map<String, dynamic>) {
+            final url = item['url'];
+            if (url is String && url.isNotEmpty) return url;
+          }
+          return '';
+        })
+        .where((url) => url.isNotEmpty)
+        .toList();
+  }
+
+  static List<dynamic> _imageUrlsToJson(List<String> items) => items;
 }

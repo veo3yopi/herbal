@@ -26,6 +26,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
   WarehouseModel? _warehouse;
   bool _isLoadingRates = false;
   bool _isLoadingDialogShown = false;
+  bool _isLoadingDialogVisible = false;
+  int _loadingDialogToken = 0;
   String? _rateError;
   int? _lastRateAddressId;
 
@@ -42,7 +44,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    const background = Color(0xFFF1F7F3);
+    const surface = Color(0xFFFFFFFF);
+    const surfaceBorder = Color(0xFFDCE8DE);
+    const primary = Color(0xFF2F6B4F);
+    const primarySoft = Color(0xFFE4F0E7);
+    const textPrimary = Color(0xFF1F3326);
+    const textMuted = Color(0xFF5E7A66);
     final formatter = NumberFormat.currency(
       locale: 'id',
       symbol: 'Rp ',
@@ -65,19 +73,26 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final totalWithShipping = cartProvider.totalPrice + shippingCost;
 
     return Scaffold(
+      backgroundColor: background,
       appBar: AppBar(
         title: const Text('Checkout'),
-        foregroundColor: theme.colorScheme.onSurface,
+        foregroundColor: textPrimary,
         backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _sectionTitle('Data Pembeli'),
+            _sectionTitle(
+              'Data Pembeli',
+              titleColor: textPrimary,
+              accentColor: primary,
+            ),
             _infoCard(
-              theme: theme,
+              background: surface,
+              borderColor: surfaceBorder,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -89,14 +104,22 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(user?['phone'] ?? '-'),
+                  Text(
+                    user?['phone'] ?? '-',
+                    style: const TextStyle(color: textMuted),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-            _sectionTitle('Alamat Pengiriman'),
+            _sectionTitle(
+              'Alamat Pengiriman',
+              titleColor: textPrimary,
+              accentColor: primary,
+            ),
             _infoCard(
-              theme: theme,
+              background: surface,
+              borderColor: surfaceBorder,
               child: Builder(
                 builder: (_) {
                   if (addressProvider.isLoading) {
@@ -108,14 +131,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   if (address == null) {
                     return const Text('Belum ada alamat utama.');
                   }
-                  return _addressView(address);
+                  return _addressView(address, textMuted: textMuted);
                 },
               ),
             ),
             const SizedBox(height: 16),
-            _sectionTitle('Gudang Pengirim'),
+            _sectionTitle(
+              'Gudang Pengirim',
+              titleColor: textPrimary,
+              accentColor: primary,
+            ),
             _infoCard(
-              theme: theme,
+              background: surface,
+              borderColor: surfaceBorder,
               child: Builder(
                 builder: (_) {
                   if (cartProvider.items.isEmpty) {
@@ -141,10 +169,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 6),
-                      Text(_warehouse!.address),
+                      Text(
+                        _warehouse!.address,
+                        style: const TextStyle(color: textMuted),
+                      ),
                       const SizedBox(height: 6),
                       Text(
                         'Jarak: ${_warehouse!.distanceKm.toStringAsFixed(2)} km',
+                        style: const TextStyle(color: textMuted),
                       ),
                     ],
                   );
@@ -152,9 +184,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
             ),
             const SizedBox(height: 16),
-            _sectionTitle('Produk'),
+            _sectionTitle(
+              'Produk',
+              titleColor: textPrimary,
+              accentColor: primary,
+            ),
             _infoCard(
-              theme: theme,
+              background: surface,
+              borderColor: surfaceBorder,
               child: cartProvider.items.isEmpty
                   ? const Text('Keranjang masih kosong.')
                   : Column(
@@ -175,7 +212,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                   ),
                                 ),
                               ),
-                              Text('x$qty'),
+                              Text(
+                                'x$qty',
+                                style: const TextStyle(color: textMuted),
+                              ),
                               const SizedBox(width: 12),
                               Text(formatter.format(price * qty)),
                             ],
@@ -185,9 +225,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     ),
             ),
             const SizedBox(height: 16),
-            _sectionTitle('Pilih Kurir'),
+            _sectionTitle(
+              'Pilih Kurir',
+              titleColor: textPrimary,
+              accentColor: primary,
+            ),
             _infoCard(
-              theme: theme,
+              background: surface,
+              borderColor: surfaceBorder,
               child: Builder(
                 builder: (_) {
                   if (cartProvider.items.isEmpty) {
@@ -223,62 +268,92 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          _selectedRate == null
-                              ? 'Pilih kurir'
-                              : '${_selectedRate!.logisticName} - ${_selectedRate!.rateName}',
+                      Container(
+                        decoration: BoxDecoration(
+                          color: primarySoft,
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        subtitle: _selectedRate == null
-                            ? null
-                            : Text(
-                                _formatDuration(
-                                  _selectedRate!.minDuration,
-                                  _selectedRate!.maxDuration,
-                                  _selectedRate!.durationType,
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
+                          title: Text(
+                            _selectedRate == null
+                                ? 'Pilih kurir'
+                                : '${_selectedRate!.logisticName} - ${_selectedRate!.rateName}',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: _selectedRate == null
+                              ? null
+                              : Text(
+                                  _formatDuration(
+                                    _selectedRate!.minDuration,
+                                    _selectedRate!.maxDuration,
+                                    _selectedRate!.durationType,
+                                  ),
+                                  style: const TextStyle(color: textMuted),
+                                ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_selectedRate != null)
+                                Text(
+                                  formatter.format(_selectedRate!.price),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.arrow_forward_ios, size: 16),
+                            ],
+                          ),
+                          onTap: () async {
+                            final selected = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CourierSelectPage(
+                                  rates: _rates,
+                                  selectedRate: _selectedRate,
                                 ),
                               ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (_selectedRate != null)
-                              Text(formatter.format(_selectedRate!.price)),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.arrow_forward_ios, size: 16),
-                          ],
+                            );
+                            if (!mounted || selected == null) return;
+                            setState(() => _selectedRate = selected);
+                          },
                         ),
-                        onTap: () async {
-                          final selected = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => CourierSelectPage(
-                                rates: _rates,
-                                selectedRate: _selectedRate,
-                              ),
-                            ),
-                          );
-                          if (!mounted || selected == null) return;
-                          setState(() => _selectedRate = selected);
-                        },
                       ),
                       if (_selectedRate == null)
-                        const Text('Belum ada kurir dipilih.'),
+                        const Padding(
+                          padding: EdgeInsets.only(top: 10),
+                          child: Text(
+                            'Belum ada kurir dipilih.',
+                            style: TextStyle(color: textMuted),
+                          ),
+                        ),
                     ],
                   );
                 },
               ),
             ),
             const SizedBox(height: 16),
-            _sectionTitle('Ringkasan'),
+            _sectionTitle(
+              'Ringkasan',
+              titleColor: textPrimary,
+              accentColor: primary,
+            ),
             _infoCard(
-              theme: theme,
+              background: surface,
+              borderColor: surfaceBorder,
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Subtotal'),
+                      const Text(
+                        'Subtotal',
+                        style: TextStyle(color: textMuted),
+                      ),
                       Text(formatter.format(cartProvider.totalPrice)),
                     ],
                   ),
@@ -286,11 +361,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Ongkir'),
+                      const Text(
+                        'Ongkir',
+                        style: TextStyle(color: textMuted),
+                      ),
                       Text(formatter.format(shippingCost)),
                     ],
                   ),
-                  const Divider(height: 24),
+                  const Divider(height: 24, color: surfaceBorder),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -302,7 +380,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         formatter.format(totalWithShipping),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
+                          color: primary,
                         ),
                       ),
                     ],
@@ -329,10 +407,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         Navigator.pop(context);
                       },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
+                  backgroundColor: primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                   ),
+                  elevation: 0,
                 ),
                 child: const Text(
                   'Buat Pesanan',
@@ -358,26 +437,52 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _sectionTitle(String text) {
+  Widget _sectionTitle(
+    String text, {
+    required Color titleColor,
+    required Color accentColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: accentColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          Text(
+            text,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: titleColor,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _infoCard({required Widget child, required ThemeData theme}) {
+  Widget _infoCard({
+    required Widget child,
+    required Color background,
+    required Color borderColor,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: background,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -466,20 +571,35 @@ class _CheckoutPageState extends State<CheckoutPage> {
   void _showLoadingDialog() {
     if (!mounted || _isLoadingDialogShown) return;
     _isLoadingDialogShown = true;
+    final token = ++_loadingDialogToken;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_isLoadingDialogShown) return;
+      if (!mounted || !_isLoadingDialogShown || _loadingDialogToken != token) {
+        return;
+      }
+      if (!_isLoadingRates) {
+        _isLoadingDialogShown = false;
+        return;
+      }
+      _isLoadingDialogVisible = true;
       CoolAlert.show(
         context: context,
         type: CoolAlertType.loading,
         barrierDismissible: false,
         text: 'Mencari gudang terdekat untuk alamat pengiriman...',
-      );
+      ).whenComplete(() {
+        if (mounted) {
+          _isLoadingDialogVisible = false;
+        }
+      });
     });
   }
 
   void _hideLoadingDialog() {
-    if (!mounted || !_isLoadingDialogShown) return;
+    if (!mounted) return;
     _isLoadingDialogShown = false;
+    _loadingDialogToken++;
+    if (!_isLoadingDialogVisible) return;
+    _isLoadingDialogVisible = false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final navigator = Navigator.of(context, rootNavigator: true);
@@ -489,7 +609,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     });
   }
 
-  Widget _addressView(AddressModel address) {
+  Widget _addressView(AddressModel address, {required Color textMuted}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -498,12 +618,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 6),
-        Text(address.recipientName),
-        Text(address.phoneNumber),
+        Text(address.recipientName, style: TextStyle(color: textMuted)),
+        Text(address.phoneNumber, style: TextStyle(color: textMuted)),
         const SizedBox(height: 6),
-        Text(address.addressLine),
-        Text('${address.districtName}, ${address.cityName}'),
-        Text('${address.provinceName} ${address.postalCode}'),
+        Text(address.addressLine, style: TextStyle(color: textMuted)),
+        Text(
+          '${address.districtName}, ${address.cityName}',
+          style: TextStyle(color: textMuted),
+        ),
+        Text(
+          '${address.provinceName} ${address.postalCode}',
+          style: TextStyle(color: textMuted),
+        ),
       ],
     );
   }
